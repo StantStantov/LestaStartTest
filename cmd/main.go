@@ -7,6 +7,7 @@ import (
 
 func main() {
 	router := http.NewServeMux()
+	router.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("web/css"))))
 	router.Handle("GET /", internal.HandleIndexGet())
 	router.Handle("POST /", internal.HandleIndexPost())
 

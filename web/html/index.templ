@@ -1,27 +1,5 @@
 package views
 
-templ Index() {
-	@head()
-	<body>
-		<form
-			hx-post="/"
-			hx-target="#table"
-			hx-swap="outerHTML"
-			hx-on::after-request="if(event.detail.successful) this.reset()"
-			enctype="multipart/form-data"
-		>
-			<div>
-				<label for="file">Choose text file to upload</label>
-				<input type="file" id="file" name="file" accept=".txt"/>
-			</div>
-			<div>
-				<button>Submit</button>
-			</div>
-		</form>
-		<table id="table"></table>
-	</body>
-}
-
 templ head() {
 	<!DOCTYPE html>
 	<html lang="en-US">
@@ -30,8 +8,38 @@ templ head() {
 			<meta name="viewport" content="width=device-width"/>
 			<title>Lesta Games Internship</title>
 			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+			<link href="/css/styles.css" rel="stylesheet"/>
 		</head>
 	</html>
+}
+
+templ Index() {
+	@head()
+	<body class="flex flex-col items-center gap-4">
+		<form
+			class="flex flex-col gap-2 w-full max-w-lg"
+			hx-post="/"
+			hx-target="#table"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+			enctype="multipart/form-data"
+		>
+			<label class="block text-sm font-medium text-gray-700" for="file">
+				Choose text file to upload
+			</label>
+			<input
+				class="block w-full text-sm text-gray-700 border border-gray-200 cursor-pointer focus:outline-none"
+				type="file"
+				id="file"
+				name="file"
+				accept=".txt"
+			/>
+			<button class="border border-gray-200 text-sm text-center text-gray-500">Submit</button>
+		</form>
+		<div class="w-full max-w-lg">
+			<table id="table"></table>
+		</div>
+	</body>
 }
 
 type TableRowViewModel struct {
@@ -41,18 +49,22 @@ type TableRowViewModel struct {
 }
 
 templ Table(table []TableRowViewModel) {
-	<table id="table">
-		<tr>
-			<th>Word</th>
-			<th>TF</th>
-			<th>IDF</th>
-		</tr>
-		for _, row := range table {
+	<table class="container border-collapse table-fixed text-sm text-left text-gray-500" id="table">
+		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
-				<th>{ row.Word }</th>
-				<th>{ row.Tf }</th>
-				<th>{ row.Idf }</th>
+				<th class="border border-gray-200 px-3 py-2">Word</th>
+				<th class="border border-gray-200 px-3 py-2">TF</th>
+				<th class="border border-gray-200 px-3 py-2">IDF</th>
 			</tr>
-		}
+		</thead>
+		<tbody>
+			for _, row := range table {
+				<tr>
+					<td class="border border-gray-200 px-3 py-2">{ row.Word }</td>
+					<td class="border border-gray-200 px-3 py-2">{ row.Tf }</td>
+					<td class="border border-gray-200 px-3 py-2">{ row.Idf }</td>
+				</tr>
+			}
+		</tbody>
 	</table>
 }
