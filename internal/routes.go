@@ -24,6 +24,7 @@ func HandleIndexPost() http.HandlerFunc {
 		file, _, err := r.FormFile("file")
 		if err != nil {
 			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+			http.Error(w, "Failed to read file", http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
@@ -40,6 +41,7 @@ func HandleIndexPost() http.HandlerFunc {
 		}
 		if err := scanner.Err(); err != nil {
 			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+			http.Error(w, "Failed to read file", http.StatusInternalServerError)
 			return
 		}
 
@@ -54,7 +56,7 @@ func HandleIndexPost() http.HandlerFunc {
 			table = table[:tableLength]
 		}
 
-		tableViewModel := make([]views.TableRowViewModel, tableLength)
+		tableViewModel := make([]views.TableRowViewModel, len(table))
 		for i, row := range table {
 			rowViewModel := views.TableRowViewModel{
 				Word: row.word,

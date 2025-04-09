@@ -24,16 +24,19 @@ templ Index() {
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 			enctype="multipart/form-data"
 		>
-			<label class="block text-sm font-medium text-gray-700" for="file">
-				Choose text file to upload
-			</label>
-			<input
-				class="block w-full text-sm text-gray-700 border border-gray-200 cursor-pointer focus:outline-none"
-				type="file"
-				id="file"
-				name="file"
-				accept=".txt"
-			/>
+			<div hx-target="this" hx-swap="outerHTML">
+				<label class="block text-sm font-medium text-gray-700" for="file">
+					Choose text file to upload
+				</label>
+				<input
+					class="block w-full text-sm text-gray-700 border border-gray-200 cursor-pointer focus:outline-none error:border-red-200 valid:border-green-200"
+					type="file"
+					id="file"
+					name="file"
+					accept=".txt"
+          required
+				/>
+			</div>
 			<button class="border border-gray-200 text-sm text-center text-gray-500">Submit</button>
 		</form>
 		<div class="w-full max-w-lg">
