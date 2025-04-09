@@ -3,6 +3,7 @@ package internal
 import (
 	"Stant/LestaGamesInternship/internal/views"
 	"bufio"
+	"context"
 	"log"
 	"maps"
 	"math"
@@ -18,6 +19,7 @@ func HandleIndexGet() http.HandlerFunc {
 }
 
 func HandleIndexPost() http.HandlerFunc {
+	MaxTableLength := 50
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(0)
 
@@ -35,8 +37,7 @@ func HandleIndexPost() http.HandlerFunc {
 		scanner.Split(bufio.ScanWords)
 		for scanner.Scan() {
 			word := scanner.Text()
-			amount := uniqueWords[word] + 1
-			uniqueWords[word] = amount
+			uniqueWords[word] = uniqueWords[word] + 1
 			totalAmount++
 		}
 		if err := scanner.Err(); err != nil {
@@ -45,33 +46,20 @@ func HandleIndexPost() http.HandlerFunc {
 			return
 		}
 
-		table := make([]tfIdfTableRow, 0, totalAmount)
+		table := make([]tableRow, 0, totalAmount)
 		for word, amount := range maps.All(uniqueWords) {
-			table = append(table, tfIdfTableRow{word, amount, calculateIdf(totalAmount, amount)})
+			table = append(table, tableRow{word, amount, calculateIdf(totalAmount, amount)})
 		}
 		slices.SortFunc(table, compareRowsByIdf)
-
-		tableLength := 50
-		if len(table) > tableLength {
-			table = table[:tableLength]
+		if len(table) > MaxTableLength {
+			table = table[:MaxTableLength]
 		}
 
-		tableViewModel := make([]views.TableRowViewModel, len(table))
-		for i, row := range table {
-			rowViewModel := views.TableRowViewModel{
-				Word: row.word,
-				Tf:   strconv.FormatUint(row.tf, 10),
-				Idf:  strconv.FormatFloat(row.idf, 'G', -1, 64),
-			}
-			tableViewModel[i] = rowViewModel
-		}
-
-		w.WriteHeader(http.StatusOK)
-		views.Table(tableViewModel).Render(r.Context(), w)
+		renderTable(table, w, r.Context())
 	})
 }
 
-type tfIdfTableRow struct {
+type tableRow struct {
 	word string
 	tf   uint64
 	idf  float64
@@ -81,11 +69,26 @@ func calculateIdf(wordsAmount uint64, wordAmount uint64) float64 {
 	return math.Log10(float64(wordsAmount) / float64(wordAmount))
 }
 
-func compareRowsByIdf(a tfIdfTableRow, b tfIdfTableRow) int {
+func compareRowsByIdf(a tableRow, b tableRow) int {
 	if a.idf < b.idf {
 		return 1
 	} else if a.idf > b.idf {
 		return -1
 	}
 	return 0
+}
+
+func renderTable(table []tableRow, w http.ResponseWriter, rCtx context.Context) {
+	tableViewModel := make([]views.TableRowViewModel, len(table))
+	for i, row := range table {
+		rowViewModel := views.TableRowViewModel{
+			Word: row.word,
+			Tf:   strconv.FormatUint(row.tf, 10),
+			Idf:  strconv.FormatFloat(row.idf, 'G', -1, 64),
+		}
+		tableViewModel[i] = rowViewModel
+	}
+
+	w.WriteHeader(http.StatusOK)
+	views.Table(tableViewModel).Render(rCtx, w)
 }
