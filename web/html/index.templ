@@ -3,7 +3,13 @@ package views
 templ Index() {
 	@head()
 	<body>
-		<form action="/" method="post" enctype="multipart/form-data">
+		<form
+			hx-post="/"
+			hx-target="#table"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+			enctype="multipart/form-data"
+		>
 			<div>
 				<label for="file">Choose text file to upload</label>
 				<input type="file" id="file" name="file" accept=".txt"/>
@@ -12,6 +18,7 @@ templ Index() {
 				<button>Submit</button>
 			</div>
 		</form>
+		<table id="table"></table>
 	</body>
 }
 
@@ -22,6 +29,30 @@ templ head() {
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width"/>
 			<title>Lesta Games Internship</title>
+			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 		</head>
 	</html>
+}
+
+type TableRowViewModel struct {
+	Word string
+	Tf   string
+	Idf  string
+}
+
+templ Table(table []TableRowViewModel) {
+	<table id="table">
+		<tr>
+			<th>Word</th>
+			<th>TF</th>
+			<th>IDF</th>
+		</tr>
+		for _, row := range table {
+			<tr>
+				<th>{ row.Word }</th>
+				<th>{ row.Tf }</th>
+				<th>{ row.Idf }</th>
+			</tr>
+		}
+	</table>
 }

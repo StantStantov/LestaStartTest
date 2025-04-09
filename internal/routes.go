@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"slices"
+	"strconv"
 )
 
 func HandleIndexGet() http.HandlerFunc {
@@ -48,10 +49,23 @@ func HandleIndexPost() http.HandlerFunc {
 		}
 		slices.SortFunc(table, compareRowsByIdf)
 
-		log.Printf("Total words amount: %d\n", totalAmount)
-		for i := range table {
-			log.Printf("%v", table[i])
+		tableLength := 50
+		if len(table) > tableLength {
+			table = table[:tableLength]
 		}
+
+		tableViewModel := make([]views.TableRowViewModel, tableLength)
+		for i, row := range table {
+			rowViewModel := views.TableRowViewModel{
+				Word: row.word,
+				Tf:   strconv.FormatUint(row.tf, 10),
+				Idf:  strconv.FormatFloat(row.idf, 'G', -1, 64),
+			}
+			tableViewModel[i] = rowViewModel
+		}
+
+		w.WriteHeader(http.StatusOK)
+		views.Table(tableViewModel).Render(r.Context(), w)
 	})
 }
 
