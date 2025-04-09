@@ -3,7 +3,15 @@ package views
 templ Index() {
 	@head()
 	<body>
-		Test
+		<form action="/" method="post" enctype="multipart/form-data">
+			<div>
+				<label for="file">Choose text file to upload</label>
+				<input type="file" id="file" name="file" accept=".txt"/>
+			</div>
+			<div>
+				<button>Submit</button>
+			</div>
+		</form>
 	</body>
 }
 

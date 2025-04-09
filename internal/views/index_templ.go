@@ -33,7 +33,7 @@ func Index() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body>Test</body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<body><form action=\"/\" method=\"post\" enctype=\"multipart/form-data\"><div><label for=\"file\">Choose text file to upload</label> <input type=\"file\" id=\"file\" name=\"file\" accept=\".txt\"></div><div><button>Submit</button></div></form></body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
