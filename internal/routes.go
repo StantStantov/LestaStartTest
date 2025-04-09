@@ -4,6 +4,7 @@ import (
 	"Stant/LestaGamesInternship/internal/views"
 	"bufio"
 	"log"
+	"maps"
 	"net/http"
 )
 
@@ -24,14 +25,20 @@ func HandleIndexPost() http.HandlerFunc {
 		}
 		defer file.Close()
 
+		uniqueWords := map[string]uint64{}
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanWords)
 		for scanner.Scan() {
-			log.Println(scanner.Text())
+			word := scanner.Text()
+			uniqueWords[word] = uniqueWords[word] + 1
 		}
 		if err := scanner.Err(); err != nil {
 			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
 			return
+		}
+
+		for word, amount := range maps.All(uniqueWords) {
+			log.Printf("%q: %d\n", word, amount)
 		}
 	})
 }
