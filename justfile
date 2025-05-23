@@ -1,6 +1,9 @@
 run:
   ./tmp/app
 
+test:
+  go test ./internal/... -count=1
+
 build:
   go build -C ./cmd -o ../tmp/app
 

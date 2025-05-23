@@ -1,12 +1,11 @@
 package internal
 
 import (
+	"Stant/LestaGamesInternship/internal/services"
 	"Stant/LestaGamesInternship/internal/views"
-	"bufio"
 	"context"
 	"log"
 	"maps"
-	"math"
 	"net/http"
 	"slices"
 	"strconv"
@@ -31,24 +30,19 @@ func HandleIndexPost() http.HandlerFunc {
 		}
 		defer file.Close()
 
-		var totalAmount uint64 = 0
-		uniqueWords := map[string]uint64{}
-		scanner := bufio.NewScanner(file)
-		scanner.Split(bufio.ScanWords)
-		for scanner.Scan() {
-			word := scanner.Text()
-			uniqueWords[word] = uniqueWords[word] + 1
-			totalAmount++
-		}
-		if err := scanner.Err(); err != nil {
+		text, err := services.ProcessReaderToTerms(file)
+		if err != nil {
 			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
 			http.Error(w, "Failed to read file", http.StatusInternalServerError)
 			return
 		}
 
+		totalAmount := uint64(len(text))
+		uniqueWords := services.GetTermFrequency(text)
+
 		table := make([]tableRow, 0, totalAmount)
 		for word, amount := range maps.All(uniqueWords) {
-			table = append(table, tableRow{word, amount, calculateIdf(totalAmount, amount)})
+			table = append(table, tableRow{word, amount, services.CalculateIdf(totalAmount, amount)})
 		}
 		slices.SortFunc(table, compareRowsByIdf)
 		if len(table) > MaxTableLength {
@@ -63,10 +57,6 @@ type tableRow struct {
 	word string
 	tf   uint64
 	idf  float64
-}
-
-func calculateIdf(wordsAmount uint64, wordAmount uint64) float64 {
-	return math.Log10(float64(wordsAmount) / float64(wordAmount))
 }
 
 func compareRowsByIdf(a tableRow, b tableRow) int {
