@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"Stant/LestaGamesInternship/internal/models"
 	"Stant/LestaGamesInternship/internal/services"
 	"Stant/LestaGamesInternship/internal/views"
 	"context"
@@ -40,9 +41,9 @@ func HandleIndexPost() http.HandlerFunc {
 		totalAmount := uint64(len(text))
 		uniqueWords := services.GetTermFrequency(text)
 
-		table := make([]tableRow, 0, totalAmount)
+		table := make([]models.Term, 0, totalAmount)
 		for word, amount := range maps.All(uniqueWords) {
-			table = append(table, tableRow{word, amount, services.CalculateIdf(totalAmount, amount)})
+			table = append(table, models.NewTerm(word, amount, services.CalculateIdf(totalAmount, amount)))
 		}
 		slices.SortFunc(table, compareRowsByIdf)
 		if len(table) > MaxTableLength {
@@ -53,28 +54,22 @@ func HandleIndexPost() http.HandlerFunc {
 	})
 }
 
-type tableRow struct {
-	word string
-	tf   uint64
-	idf  float64
-}
-
-func compareRowsByIdf(a tableRow, b tableRow) int {
-	if a.idf < b.idf {
+func compareRowsByIdf(a models.Term, b models.Term) int {
+	if a.Idf() < b.Idf() {
 		return 1
-	} else if a.idf > b.idf {
+	} else if a.Idf() > b.Idf() {
 		return -1
 	}
 	return 0
 }
 
-func renderTable(table []tableRow, w http.ResponseWriter, rCtx context.Context) {
+func renderTable(table []models.Term, w http.ResponseWriter, rCtx context.Context) {
 	tableViewModel := make([]views.TableRowViewModel, len(table))
 	for i, row := range table {
 		rowViewModel := views.TableRowViewModel{
-			Word: row.word,
-			Tf:   strconv.FormatUint(row.tf, 10),
-			Idf:  strconv.FormatFloat(row.idf, 'G', -1, 64),
+			Word: row.Word(),
+			Tf:   strconv.FormatUint(row.Frequency(), 10),
+			Idf:  strconv.FormatFloat(row.Idf(), 'G', -1, 64),
 		}
 		tableViewModel[i] = rowViewModel
 	}
