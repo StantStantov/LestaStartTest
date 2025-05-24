@@ -3,6 +3,7 @@ package internal
 import (
 	"Stant/LestaGamesInternship/internal/models"
 	"Stant/LestaGamesInternship/internal/services"
+	"Stant/LestaGamesInternship/internal/stores"
 	"Stant/LestaGamesInternship/internal/views"
 	"context"
 	"log"
@@ -12,13 +13,13 @@ import (
 	"strconv"
 )
 
-func HandleIndexGet() http.HandlerFunc {
+func HandleIndexGet(termStore stores.TermStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		views.Index().Render(r.Context(), w)
 	})
 }
 
-func HandleIndexPost() http.HandlerFunc {
+func HandleIndexPost(termStore stores.TermStore) http.HandlerFunc {
 	MaxTableLength := 50
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(0)
@@ -41,9 +42,29 @@ func HandleIndexPost() http.HandlerFunc {
 		totalAmount := uint64(len(text))
 		uniqueWords := services.GetTermFrequency(text)
 
-		table := make([]models.Term, 0, totalAmount)
+		length, err := termStore.CountAll()
+		if err != nil {
+			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+			http.Error(w, "Failed to access database", http.StatusInternalServerError)
+			return
+		}
+		for id := range length {
+			termStore.Delete(length - id - 1)
+		}
 		for word, amount := range maps.All(uniqueWords) {
-			table = append(table, models.NewTerm(word, amount, services.CalculateIdf(totalAmount, amount)))
+			term := models.NewTerm(word, amount, services.CalculateIdf(totalAmount, amount))
+			if err := termStore.Create(term); err != nil {
+				log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+				http.Error(w, "Failed to access database", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		table, err := termStore.ReadAll()
+		if err != nil {
+			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+			http.Error(w, "Failed to access database", http.StatusInternalServerError)
+			return
 		}
 		slices.SortFunc(table, compareRowsByIdf)
 		if len(table) > MaxTableLength {
