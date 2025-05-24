@@ -13,7 +13,13 @@ templ head() {
 	</html>
 }
 
-templ Index() {
+type TableRowViewModel struct {
+	Word string
+	Tf   string
+	Idf  string
+}
+
+templ Index(table []TableRowViewModel) {
 	@head()
 	<body class="flex flex-col items-center gap-4">
 		<form
@@ -34,21 +40,15 @@ templ Index() {
 					id="file"
 					name="file"
 					accept=".txt"
-          required
+					required
 				/>
 			</div>
 			<button class="border border-gray-200 text-sm text-center text-gray-500">Submit</button>
 		</form>
 		<div class="w-full max-w-lg">
-			<table id="table"></table>
+			@Table(table)
 		</div>
 	</body>
-}
-
-type TableRowViewModel struct {
-	Word string
-	Tf   string
-	Idf  string
 }
 
 templ Table(table []TableRowViewModel) {

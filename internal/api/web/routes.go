@@ -1,11 +1,10 @@
-package internal
+package web
 
 import (
-	"Stant/LestaGamesInternship/internal/models"
-	"Stant/LestaGamesInternship/internal/services"
-	"Stant/LestaGamesInternship/internal/stores"
-	"Stant/LestaGamesInternship/internal/views"
-	"context"
+	"Stant/LestaGamesInternship/internal/api/web/views"
+	"Stant/LestaGamesInternship/internal/app/services"
+	"Stant/LestaGamesInternship/internal/domain/models"
+	"Stant/LestaGamesInternship/internal/domain/stores"
 	"log"
 	"maps"
 	"net/http"
@@ -14,8 +13,23 @@ import (
 )
 
 func HandleIndexGet(termStore stores.TermStore) http.HandlerFunc {
+	MaxTableLength := 50
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		views.Index().Render(r.Context(), w)
+		table, err := termStore.ReadAll()
+		if err != nil {
+			log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+			http.Error(w, "Failed to access database", http.StatusInternalServerError)
+			return
+		}
+		slices.SortFunc(table, compareRowsByIdf)
+		if len(table) > MaxTableLength {
+			table = table[:MaxTableLength]
+		}
+
+		tableViewModel := renderTable(table)
+
+		w.WriteHeader(http.StatusOK)
+		views.Index(tableViewModel).Render(r.Context(), w)
 	})
 }
 
@@ -49,7 +63,11 @@ func HandleIndexPost(termStore stores.TermStore) http.HandlerFunc {
 			return
 		}
 		for id := range length {
-			termStore.Delete(length - id - 1)
+			if err := termStore.Delete(length - id - 1); err != nil {
+				log.Printf("Internal/routes.HandleIndexPost: [%v]", err)
+				http.Error(w, "Failed to access database", http.StatusInternalServerError)
+				return
+			}
 		}
 		for word, amount := range maps.All(uniqueWords) {
 			term := models.NewTerm(word, amount, services.CalculateIdf(totalAmount, amount))
@@ -71,7 +89,9 @@ func HandleIndexPost(termStore stores.TermStore) http.HandlerFunc {
 			table = table[:MaxTableLength]
 		}
 
-		renderTable(table, w, r.Context())
+		tableViewModel := renderTable(table)
+		w.WriteHeader(http.StatusOK)
+		views.Table(tableViewModel).Render(r.Context(), w)
 	})
 }
 
@@ -84,7 +104,7 @@ func compareRowsByIdf(a models.Term, b models.Term) int {
 	return 0
 }
 
-func renderTable(table []models.Term, w http.ResponseWriter, rCtx context.Context) {
+func renderTable(table []models.Term) []views.TableRowViewModel {
 	tableViewModel := make([]views.TableRowViewModel, len(table))
 	for i, row := range table {
 		rowViewModel := views.TableRowViewModel{
@@ -94,7 +114,5 @@ func renderTable(table []models.Term, w http.ResponseWriter, rCtx context.Contex
 		}
 		tableViewModel[i] = rowViewModel
 	}
-
-	w.WriteHeader(http.StatusOK)
-	views.Table(tableViewModel).Render(rCtx, w)
+	return tableViewModel
 }

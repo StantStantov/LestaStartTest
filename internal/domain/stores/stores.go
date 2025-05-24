@@ -1,6 +1,6 @@
 package stores
 
-import "Stant/LestaGamesInternship/internal/models"
+import "Stant/LestaGamesInternship/internal/domain/models"
 
 type TermStore interface {
 	Create(term models.Term) error

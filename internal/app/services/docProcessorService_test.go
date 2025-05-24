@@ -1,7 +1,7 @@
 package services_test
 
 import (
-	"Stant/LestaGamesInternship/internal/services"
+	"Stant/LestaGamesInternship/internal/app/services"
 	"maps"
 	"slices"
 	"strings"

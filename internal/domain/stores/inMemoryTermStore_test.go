@@ -1,8 +1,8 @@
 package stores_test
 
 import (
-	"Stant/LestaGamesInternship/internal/models"
-	"Stant/LestaGamesInternship/internal/stores"
+	"Stant/LestaGamesInternship/internal/domain/models"
+	"Stant/LestaGamesInternship/internal/domain/stores"
 	"slices"
 	"testing"
 )

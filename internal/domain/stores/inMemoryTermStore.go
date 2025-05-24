@@ -1,7 +1,7 @@
 package stores
 
 import (
-	"Stant/LestaGamesInternship/internal/models"
+	"Stant/LestaGamesInternship/internal/domain/models"
 	"fmt"
 	"slices"
 )

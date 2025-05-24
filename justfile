@@ -13,7 +13,7 @@ templ:
 
   for directory in `find web/html -type d`; do
     if `find "${directory}" -maxdepth 1 -name "*_templ.go" | read v`; then
-      copy_to=${directory/web\/html/internal/views};
+      copy_to=${directory/web\/html/internal/api/web/views};
       if ! `find ${copy_to} -type d | read v`; then
         mkdir ${copy_to};
       fi;
