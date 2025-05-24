@@ -37,7 +37,13 @@ func head() templ.Component {
 	})
 }
 
-func Index() templ.Component {
+type TableRowViewModel struct {
+	Word string
+	Tf   string
+	Idf  string
+}
+
+func Index(table []TableRowViewModel) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -62,18 +68,20 @@ func Index() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body class=\"flex flex-col items-center gap-4\"><form class=\"flex flex-col gap-2 w-full max-w-lg\" hx-post=\"/\" hx-target=\"#table\" hx-swap=\"outerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset()\" enctype=\"multipart/form-data\"><div hx-target=\"this\" hx-swap=\"outerHTML\"><label class=\"block text-sm font-medium text-gray-700\" for=\"file\">Choose text file to upload</label> <input class=\"block w-full text-sm text-gray-700 border border-gray-200 cursor-pointer focus:outline-none error:border-red-200 valid:border-green-200\" type=\"file\" id=\"file\" name=\"file\" accept=\".txt\" required></div><button class=\"border border-gray-200 text-sm text-center text-gray-500\">Submit</button></form><div class=\"w-full max-w-lg\"><table id=\"table\"></table></div></body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<body class=\"flex flex-col items-center gap-4\"><form class=\"flex flex-col gap-2 w-full max-w-lg\" hx-post=\"/\" hx-target=\"#table\" hx-swap=\"outerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset()\" enctype=\"multipart/form-data\"><div hx-target=\"this\" hx-swap=\"outerHTML\"><label class=\"block text-sm font-medium text-gray-700\" for=\"file\">Choose text file to upload</label> <input class=\"block w-full text-sm text-gray-700 border border-gray-200 cursor-pointer focus:outline-none error:border-red-200 valid:border-green-200\" type=\"file\" id=\"file\" name=\"file\" accept=\".txt\" required></div><button class=\"border border-gray-200 text-sm text-center text-gray-500\">Submit</button></form><div class=\"w-full max-w-lg\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = Table(table).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
-}
-
-type TableRowViewModel struct {
-	Word string
-	Tf   string
-	Idf  string
 }
 
 func Table(table []TableRowViewModel) templ.Component {
@@ -97,12 +105,12 @@ func Table(table []TableRowViewModel) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<table class=\"container border-collapse table-fixed text-sm text-left text-gray-500\" id=\"table\"><thead class=\"text-xs text-gray-700 uppercase bg-gray-50\"><tr><th class=\"border border-gray-200 px-3 py-2\">Word</th><th class=\"border border-gray-200 px-3 py-2\">TF</th><th class=\"border border-gray-200 px-3 py-2\">IDF</th></tr></thead> <tbody>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<table class=\"container border-collapse table-fixed text-sm text-left text-gray-500\" id=\"table\"><thead class=\"text-xs text-gray-700 uppercase bg-gray-50\"><tr><th class=\"border border-gray-200 px-3 py-2\">Word</th><th class=\"border border-gray-200 px-3 py-2\">TF</th><th class=\"border border-gray-200 px-3 py-2\">IDF</th></tr></thead> <tbody>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, row := range table {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<tr><td class=\"border border-gray-200 px-3 py-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<tr><td class=\"border border-gray-200 px-3 py-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -115,7 +123,7 @@ func Table(table []TableRowViewModel) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</td><td class=\"border border-gray-200 px-3 py-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</td><td class=\"border border-gray-200 px-3 py-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,7 +136,7 @@ func Table(table []TableRowViewModel) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</td><td class=\"border border-gray-200 px-3 py-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</td><td class=\"border border-gray-200 px-3 py-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -141,12 +149,12 @@ func Table(table []TableRowViewModel) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</tbody></table>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</tbody></table>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
