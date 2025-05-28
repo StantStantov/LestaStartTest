@@ -9,10 +9,6 @@ import (
 )
 
 func SumValues(metrics []models.Metric) (float64, error) {
-	if len(metrics) == 0 {
-		return 0, fmt.Errorf("Services/metricService.SumValues: [metrics are empty]")
-	}
-
 	var sumValues float64 = 0
 	for _, metric := range metrics {
 		sumValues += metric.Value()
