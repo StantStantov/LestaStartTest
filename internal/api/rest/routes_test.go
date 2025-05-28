@@ -8,6 +8,7 @@ import (
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"runtime/debug"
 	"testing"
 )
 
@@ -15,8 +16,7 @@ func TestRestApi(t *testing.T) {
 	metricsStore := stores.NewInMemoryMetricStore()
 
 	router := http.NewServeMux()
-	router.Handle("GET /api/status", rest.HandleStatusGet())
-	router.Handle("GET /api/metrics", rest.HandleGetMetrics(metricsStore))
+	rest.SetupRestRouter(router, metricsStore)
 
 	t.Run("Get app status", func(t *testing.T) {
 		t.Helper()
@@ -64,6 +64,31 @@ func TestRestApi(t *testing.T) {
 		}
 		if wantBody != gotBody {
 			t.Fatalf("Want Body %+v, got %+v", wantBody, gotBody)
+		}
+	})
+	t.Run("Get app version", func(t *testing.T) {
+		t.Helper()
+
+		wantCode := http.StatusOK
+		info, _ := debug.ReadBuildInfo()
+		wantBody := map[string]string{"version": info.Main.Version}
+
+		request, err := http.NewRequest("GET", "/api/version", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+
+		gotCode := response.Code
+		gotBody := map[string]string{}
+		json.NewDecoder(response.Body).Decode(&gotBody)
+
+		if gotCode != wantCode {
+			t.Fatalf("Want Status %d, got %d", wantCode, gotCode)
+		}
+		if !maps.Equal(wantBody, gotBody) {
+			t.Fatalf("Want Body %v, got %v", wantBody, gotBody)
 		}
 	})
 }

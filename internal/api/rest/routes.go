@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 func SetupRestRouter(router *http.ServeMux, metricsStore stores.MetricStore) {
 	router.Handle("GET /api/status", HandleStatusGet())
 	router.Handle("GET /api/metrics", HandleGetMetrics(metricsStore))
+	router.Handle("GET /api/version", HandleGetVerstion())
 }
 
 func HandleStatusGet() http.HandlerFunc {
@@ -88,5 +90,16 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(metricsJson)
+	})
+}
+
+func HandleGetVerstion() http.HandlerFunc {
+	info, _ := debug.ReadBuildInfo()
+	version := fmt.Sprintf(`{"version": "%s"}`, info.Main.Version)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, version)
 	})
 }
