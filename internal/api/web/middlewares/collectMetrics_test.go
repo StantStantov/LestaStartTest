@@ -69,17 +69,14 @@ func newMockRouter(metricStore stores.MetricStore) *http.ServeMux {
 	metricMiddleware := middlewares.NewCollectMetricsMiddleware(metricStore)
 
 	router := http.NewServeMux()
-	router.Handle("POST /good", metricMiddleware(mockPostHandler(map[string]string{"Content-Type": "multipart/form-data"})))
-	router.Handle("POST /bad", metricMiddleware(mockPostHandler(nil)))
+	router.Handle("POST /good", metricMiddleware(mockPostHandler(http.StatusOK)))
+	router.Handle("POST /bad", metricMiddleware(mockPostHandler(http.StatusInternalServerError)))
 
 	return router
 }
 
-func mockPostHandler(headers map[string]string) http.HandlerFunc {
+func mockPostHandler(code int) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for key, value := range headers {
-			w.Header().Set(key, value)
-		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(code)
 	})
 }

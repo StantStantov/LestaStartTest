@@ -18,9 +18,7 @@ func NewCollectMetricsMiddleware(metricStore stores.MetricStore) func(http.Handl
 			endTimestamp := time.Now()
 			duration := endTimestamp.Sub(startTimestamp)
 
-			contentType := wrappedWriter.Header().Get("Content-Type")
-			println(contentType)
-			if (wrappedWriter.status == http.StatusOK) && (contentType == "multipart/form-data") {
+			if wrappedWriter.status == http.StatusOK {
 				metricStore.Create(models.NewMetric(endTimestamp, models.FilesProcessed, 1))
 				metricStore.Create(models.NewMetric(endTimestamp, models.TimeProcessed, duration.Seconds()))
 			}
