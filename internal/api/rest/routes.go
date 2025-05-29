@@ -12,12 +12,12 @@ import (
 )
 
 func SetupRestRouter(router *http.ServeMux, metricsStore stores.MetricStore) {
-	router.Handle("GET /api/status", HandleStatusGet())
+	router.Handle("GET /api/status", HandleGetStatus())
 	router.Handle("GET /api/metrics", HandleGetMetrics(metricsStore))
 	router.Handle("GET /api/version", HandleGetVerstion())
 }
 
-func HandleStatusGet() http.HandlerFunc {
+func HandleGetStatus() http.HandlerFunc {
 	const status = `{"status": "OK"}`
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
