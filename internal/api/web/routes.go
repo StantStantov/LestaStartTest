@@ -1,6 +1,7 @@
 package web
 
 import (
+	"Stant/LestaGamesInternship/internal/api/web/middlewares"
 	"Stant/LestaGamesInternship/internal/api/web/views"
 	"Stant/LestaGamesInternship/internal/app/services"
 	"Stant/LestaGamesInternship/internal/domain/models"
@@ -12,7 +13,15 @@ import (
 	"strconv"
 )
 
-func HandleIndexGet(termStore stores.TermStore) http.HandlerFunc {
+func SetupWebRouter(router *http.ServeMux, metricsStore stores.MetricStore, termStore stores.TermStore) {
+	collectMetrics := middlewares.NewCollectMetricsMiddleware(metricsStore)
+
+	router.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("web/css"))))
+	router.Handle("GET /", HandleGetIndex(termStore))
+	router.Handle("POST /", collectMetrics(HandlePostIndex(termStore)))
+}
+
+func HandleGetIndex(termStore stores.TermStore) http.HandlerFunc {
 	MaxTableLength := 50
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		table, err := termStore.ReadAll()
@@ -33,7 +42,7 @@ func HandleIndexGet(termStore stores.TermStore) http.HandlerFunc {
 	})
 }
 
-func HandleIndexPost(termStore stores.TermStore) http.HandlerFunc {
+func HandlePostIndex(termStore stores.TermStore) http.HandlerFunc {
 	MaxTableLength := 50
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(0)

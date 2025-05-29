@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Stant/LestaGamesInternship/internal/api/rest"
 	"Stant/LestaGamesInternship/internal/api/web"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"net/http"
@@ -8,11 +9,11 @@ import (
 
 func main() {
 	inMemoryTermStore := stores.NewInMemoryTermStore()
+	inMemoryMetricStore := stores.NewInMemoryMetricStore()
 
 	router := http.NewServeMux()
-	router.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("web/css"))))
-	router.Handle("GET /", web.HandleIndexGet(inMemoryTermStore))
-	router.Handle("POST /", web.HandleIndexPost(inMemoryTermStore))
+	web.SetupWebRouter(router, inMemoryMetricStore, inMemoryTermStore)
+	rest.SetupRestRouter(router, inMemoryMetricStore)
 
 	server := http.Server{
 		Addr:    ":8080",
