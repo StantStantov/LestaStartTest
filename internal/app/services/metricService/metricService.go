@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-func SumValues(metrics []models.Metric) (float64, error) {
+func SumValues(metrics []models.Metric) float64 {
 	var sumValues float64 = 0
 	for _, metric := range metrics {
 		sumValues += metric.Value()
 	}
 
-	return sumValues, nil
+	return sumValues
 }
 
 func FindMaxByValue(metrics []models.Metric) (float64, error) {
@@ -37,7 +37,7 @@ func FindMinByValue(metrics []models.Metric) (float64, error) {
 	if len(metrics) == 0 {
 		return 0, fmt.Errorf("Services/metricService.FindMinByValue: [metrics are empty]")
 	}
-	
+
 	return slices.MinFunc(metrics, compareByValue).Value(), nil
 }
 

@@ -45,12 +45,7 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 		}
 
 		if len(filesMetrics) != 0 {
-			filesProcessedCount, err := metricService.SumValues(filesMetrics)
-			if err != nil {
-				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
-				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
-				return
-			}
+			filesProcessedCount := metricService.SumValues(filesMetrics)
 			latestFileProcessed, err := metricService.FindMaxByTimestamp(filesMetrics)
 			if err != nil {
 				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
@@ -63,12 +58,7 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 		}
 
 		if len(timeMetrics) != 0 {
-			timeProcessedCount, err := metricService.SumValues(timeMetrics)
-			if err != nil {
-				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
-				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
-				return
-			}
+			timeProcessedCount := metricService.SumValues(timeMetrics)
 			minTimeProcessed, err := metricService.FindMinByValue(timeMetrics)
 			if err != nil {
 				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)

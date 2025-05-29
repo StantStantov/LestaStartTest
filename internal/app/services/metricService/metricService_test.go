@@ -37,10 +37,7 @@ func testSumValues(t *testing.T) {
 	}
 
 	want := 4.0
-	got, err := metricService.SumValues(metrics)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := metricService.SumValues(metrics)
 	if got != want {
 		t.Errorf("Wanted %f, got %f", want, got)
 	}
