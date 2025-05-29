@@ -2,7 +2,7 @@ package rest_test
 
 import (
 	"Stant/LestaGamesInternship/internal/api/rest"
-	"Stant/LestaGamesInternship/internal/app/services/metricService"
+	"Stant/LestaGamesInternship/internal/app/valueObjects"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"encoding/json"
 	"maps"
@@ -46,7 +46,7 @@ func TestRestApi(t *testing.T) {
 		t.Helper()
 
 		wantCode := http.StatusOK
-		wantBody := metricService.AppMetrics{}
+		wantBody := valueObjects.AppMetrics{}
 
 		request, err := http.NewRequest("GET", "/api/metrics", nil)
 		if err != nil {
@@ -56,7 +56,7 @@ func TestRestApi(t *testing.T) {
 		router.ServeHTTP(response, request)
 
 		gotCode := response.Code
-		gotBody := metricService.AppMetrics{}
+		gotBody := valueObjects.AppMetrics{}
 		json.NewDecoder(response.Body).Decode(&gotBody)
 
 		if gotCode != wantCode {

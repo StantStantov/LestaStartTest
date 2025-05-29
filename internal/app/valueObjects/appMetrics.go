@@ -1,4 +1,4 @@
-package metricService
+package valueObjects
 
 import "time"
 

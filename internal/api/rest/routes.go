@@ -2,6 +2,7 @@ package rest
 
 import (
 	"Stant/LestaGamesInternship/internal/app/services/metricService"
+	"Stant/LestaGamesInternship/internal/app/valueObjects"
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"encoding/json"
@@ -28,7 +29,7 @@ func HandleGetStatus() http.HandlerFunc {
 }
 
 func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
-	metricsJson := metricService.AppMetrics{}
+	metricsJson := valueObjects.AppMetrics{}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		filesMetrics, err := metricsStore.ReadAllByName(models.FilesProcessed)
