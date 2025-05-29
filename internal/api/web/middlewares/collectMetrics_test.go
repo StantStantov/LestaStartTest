@@ -9,14 +9,6 @@ import (
 )
 
 func TestCollectMetrics(t *testing.T) {
-	// metricStore := stores.NewInMemoryMetricStore()
-	//
-	// metricMiddleware := middlewares.NewCollectMetricsMiddleware(metricStore)
-	//
-	// router := http.NewServeMux()
-	// router.Handle("POST /good", metricMiddleware(mockPostHandler(map[string]string{"Content-Type": "multipart/form-data"})))
-	// router.Handle("POST /bad", metricMiddleware(mockPostHandler(nil)))
-
 	t.Run("Collect if OK", func(t *testing.T) {
 		t.Helper()
 
