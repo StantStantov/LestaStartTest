@@ -3,7 +3,7 @@ services:
     image: stant/lesta-start-app:prod
     build:
       context: ../../
-      dockerfile: build/prod/dockerfile
+      dockerfile: build/app.dockerfile
     environment:
       SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}
     ports:
