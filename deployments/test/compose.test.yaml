@@ -3,8 +3,11 @@ services:
     image: stant/lesta-start-app:test
     build:
       context: ../../
-      dockerfile: build/testapp.dockerfile
+      dockerfile: build/app.dockerfile
+      target: base
     volumes:
+      - ${PWD}:/src
       - ${GOCACHE}:/root/.cache/go-build
+      - ${GOMODCACHE}:/go/pkg/mod
     environment:
       SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}

@@ -1,13 +1,10 @@
 services:
   web:
     image: stant/lesta-start-app:dev
-    tty: true
-    stdin_open: true
     build:
       context: ../../
       dockerfile: build/app.dockerfile
-    volumes:
-      - ${PWD}:/usr/src/project:rw
+      target: runner
     environment:
       SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}
     ports:
