@@ -1,0 +1,10 @@
+services:
+  web:
+    image: stant/lesta-start-app:test
+    build:
+      context: ../../
+      dockerfile: build/testapp.dockerfile
+    volumes:
+      - ${GOCACHE}:/root/.cache/go-build
+    environment:
+      SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}
