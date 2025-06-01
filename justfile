@@ -1,11 +1,37 @@
-run:
-  ./tmp/app
+set dotenv-load := true
+set dotenv-required := true
+
+export GOCACHE := `go env GOCACHE`
+export GOMODCACHE := `go env GOMODCACHE`
+
+remote-context := "lesta-start"
+dev-compose := "deployments/dev/compose.dev.yaml"
+test-compose := "deployments/test/compose.test.yaml"
+prod-compose := "deployments/prod/compose.prod.yaml"
+
+default:
+  @just --list
+
+build-dev:
+  COMPOSE_BAKE=true docker compose -f {{dev-compose}} build
+
+build-test:
+  COMPOSE_BAKE=true docker compose -f {{test-compose}} build
+
+build-prod:
+  COMPOSE_BAKE=true docker compose -f {{prod-compose}} build
 
 test:
-  go test ./internal/... -count=1
+  python scripts/run-tests.py
 
-build:
-  go build -C ./cmd -o ../tmp/app
+up-dev:
+  docker compose -f {{dev-compose}} up
+
+up-prod:
+  docker compose -f {{prod-compose}} up
+
+deploy:
+  docker --context {{remote-context}} stack deploy -c {{prod-compose}} lesta-start
 
 templ:
   #!/usr/bin/env sh
