@@ -1,0 +1,11 @@
+services:
+  web:
+    image: stant/lesta-start-app:prod
+    build:
+      context: ../../
+      dockerfile: build/app.dockerfile
+      target: runner
+    environment:
+      SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
