@@ -6,14 +6,14 @@ import (
 )
 
 type User struct {
-	uid            string
+	id             string
 	name           string
 	hashedPassword string
 }
 
-func NewUser(uid, name, password string) User {
+func NewUser(id, name, password string) User {
 	return User{
-		uid:            uid,
+		id:             id,
 		name:           name,
 		hashedPassword: password,
 	}
@@ -36,8 +36,8 @@ func (u *User) ChangePassword(currentPassword, newPassword string, validator ser
 	return nil
 }
 
-func (u *User) Uid() string {
-	return u.uid
+func (u *User) Id() string {
+	return u.id
 }
 
 func (u *User) Name() string {

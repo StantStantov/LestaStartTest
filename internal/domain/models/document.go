@@ -1,21 +1,31 @@
 package models
 
+import (
+	"os"
+)
+
 type Document struct {
+	id   string
 	name string
-	id   uint64
+	file *os.File
 }
 
-func NewDocument(id uint64, filename string) Document {
+func NewDocument(id, name string, file *os.File) Document {
 	return Document{
-		name: filename,
 		id:   id,
+		name: name,
+		file: file,
 	}
+}
+
+func (d *Document) Id() string {
+	return d.id
 }
 
 func (d *Document) Name() string {
 	return d.name
 }
 
-func (d *Document) Id() uint64 {
-	return d.id
+func (d *Document) File() *os.File {
+	return d.file
 }
