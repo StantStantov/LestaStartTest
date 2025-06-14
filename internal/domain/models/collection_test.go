@@ -37,7 +37,7 @@ func testCollectionAddDocument(t *testing.T, idGen services.IdGenerator) {
 
 		collection := models.NewEmptyCollection(idGen.GenerateId(), "test", "123456")
 
-		if err := collection.AddDocument(models.NewDocument(idGen.GenerateId(), "file", nil)); err != nil {
+		if err := collection.AddDocument(models.NewDocument(idGen.GenerateId(), idGen.GenerateId(), "file", nil)); err != nil {
 			t.Errorf("Wanted %v, got %v", nil, err)
 		}
 	})
@@ -45,12 +45,12 @@ func testCollectionAddDocument(t *testing.T, idGen services.IdGenerator) {
 		t.Parallel()
 
 		collection := models.NewEmptyCollection(idGen.GenerateId(), "test", "123456")
-		term := models.NewDocument(idGen.GenerateId(), "file", nil)
+		document := models.NewDocument(idGen.GenerateId(), idGen.GenerateId(), "file", nil)
 
-		if err := collection.AddDocument(term); err != nil {
+		if err := collection.AddDocument(document); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
-		if err := collection.AddDocument(term); err == nil {
+		if err := collection.AddDocument(document); err == nil {
 			t.Errorf("Wanted err, got %v", err)
 		}
 	})
@@ -62,7 +62,7 @@ func testCollectionFindDocument(t *testing.T, idGen services.IdGenerator) {
 	t.Run("PASS if found", func(t *testing.T) {
 		t.Parallel()
 
-		want := models.NewDocument(idGen.GenerateId(), "file", nil)
+		want := models.NewDocument(idGen.GenerateId(), idGen.GenerateId(), "file", nil)
 		collection := models.NewEmptyCollection(idGen.GenerateId(), "test", "123456")
 
 		if err := collection.AddDocument(want); err != nil {
@@ -94,7 +94,7 @@ func testCollectionRemoveDocument(t *testing.T, idGen services.IdGenerator) {
 	t.Run("PASS if removed", func(t *testing.T) {
 		t.Parallel()
 
-		want := models.NewDocument(idGen.GenerateId(), "file", nil)
+		want := models.NewDocument(idGen.GenerateId(), idGen.GenerateId(), "file", nil)
 		collection := models.NewEmptyCollection(idGen.GenerateId(), "test", "123456")
 
 		if err := collection.AddDocument(want); err != nil {
