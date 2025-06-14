@@ -6,10 +6,13 @@ import (
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func SetupRestRouter(router *http.ServeMux, metricsStore stores.MetricStore) {
@@ -32,15 +35,15 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 	metricsJson := valueObjects.AppMetrics{}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		filesMetrics, err := metricsStore.ReadAllByName(models.FilesProcessed)
-		if err != nil {
-			log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
+		filesMetrics, err := metricsStore.FindAllByName(r.Context(), models.FilesProcessed)
+		if err != nil && errors.Unwrap(errors.Unwrap(err)) != pgx.ErrNoRows {
+			log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
 			http.Error(w, "Failed to access database", http.StatusInternalServerError)
 			return
 		}
-		timeMetrics, err := metricsStore.ReadAllByName(models.TimeProcessed)
-		if err != nil {
-			log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
+		timeMetrics, err := metricsStore.FindAllByName(r.Context(), models.TimeProcessed)
+		if err != nil && errors.Unwrap(errors.Unwrap(err)) != pgx.ErrNoRows {
+			log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
 			http.Error(w, "Failed to access database", http.StatusInternalServerError)
 			return
 		}
@@ -49,7 +52,7 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 			filesProcessedCount := metricService.SumValues(filesMetrics)
 			latestFileProcessed, err := metricService.FindMaxByTimestamp(filesMetrics)
 			if err != nil {
-				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
+				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}
@@ -62,13 +65,13 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 			timeProcessedCount := metricService.SumValues(timeMetrics)
 			minTimeProcessed, err := metricService.FindMinByValue(timeMetrics)
 			if err != nil {
-				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
+				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}
 			maxTimeProcessed, err := metricService.FindMaxByValue(timeMetrics)
 			if err != nil {
-				log.Printf("Internal/rest.HandleGetMetrics: [%v]", err)
+				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}

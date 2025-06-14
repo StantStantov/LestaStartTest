@@ -1,3 +1,5 @@
+//go:build unit || !integration
+
 package models_test
 
 import (
@@ -11,7 +13,7 @@ func TestStatisticsAddTerm(t *testing.T) {
 	t.Run("PASS if added", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		want := models.NewTerm("Test", 1, 1)
 
@@ -29,7 +31,7 @@ func TestStatisticsAddTerm(t *testing.T) {
 	})
 	t.Run("FAIL if max capacity", func(t *testing.T) {
 		t.Parallel()
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		for range models.MaxStatisticTermsAmount {
 			if err := stat.AddTerm(models.NewTerm(rand.Text(), 1, 1)); err != nil {
@@ -44,7 +46,7 @@ func TestStatisticsAddTerm(t *testing.T) {
 	t.Run("FAIL if duplicate", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		term := models.NewTerm("Test", 1, 1)
 
@@ -63,7 +65,7 @@ func TestStatisticsFindTerm(t *testing.T) {
 	t.Run("PASS if found", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		want := models.NewTerm("Test", 1, 1)
 
@@ -82,7 +84,7 @@ func TestStatisticsFindTerm(t *testing.T) {
 	t.Run("FAIL if not present", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		_, err := stat.FindTerm("Test")
 		if err == nil {
@@ -96,7 +98,7 @@ func TestStatisticsRemoveTerm(t *testing.T) {
 	t.Run("PASS if removed", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		term := models.NewTerm("Test", 1, 1)
 
@@ -117,7 +119,7 @@ func TestStatisticsRemoveTerm(t *testing.T) {
 	t.Run("FAIL if empty", func(t *testing.T) {
 		t.Parallel()
 
-		stat := models.NewEmptyStatistic(0)
+		stat := models.NewEmptyStatistic(rand.Text())
 
 		if err := stat.RemoveTerm("Test"); err == nil {
 			t.Errorf("Wanted err, got %v", err)

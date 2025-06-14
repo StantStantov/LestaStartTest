@@ -5,6 +5,8 @@ COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
   go mod download
 
+FROM base AS test
+
 FROM base AS build
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
@@ -12,6 +14,5 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM alpine:latest AS runner
 WORKDIR /app
-COPY --from=build /src/web/css/. ./web/css/.
 COPY --from=build /src/tmp/app ./tmp/app
 ENTRYPOINT ["/app/tmp/app"]

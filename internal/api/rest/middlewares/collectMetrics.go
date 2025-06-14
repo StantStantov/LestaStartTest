@@ -19,8 +19,8 @@ func NewCollectMetricsMiddleware(metricStore stores.MetricStore) func(http.Handl
 			duration := endTimestamp.Sub(startTimestamp)
 
 			if wrappedWriter.status == http.StatusOK {
-				metricStore.Create(models.NewMetric(endTimestamp, models.FilesProcessed, 1))
-				metricStore.Create(models.NewMetric(endTimestamp, models.TimeProcessed, duration.Seconds()))
+				metricStore.Track(r.Context(), models.NewMetric(endTimestamp, models.FilesProcessed, 1))
+				metricStore.Track(r.Context(), models.NewMetric(endTimestamp, models.TimeProcessed, duration.Seconds()))
 			}
 		})
 	}

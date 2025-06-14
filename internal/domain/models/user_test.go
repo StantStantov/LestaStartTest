@@ -1,22 +1,42 @@
+//go:build unit || !integration
+
 package models_test
 
 import (
-	"Stant/LestaGamesInternship/internal/domain/services"
 	"Stant/LestaGamesInternship/internal/domain/models"
+	"Stant/LestaGamesInternship/internal/domain/services"
+	"crypto/rand"
 	"fmt"
 	"testing"
 )
 
-func TestUserIsUserPassword(t *testing.T) {
-	t.Parallel()
+func TestUser(t *testing.T) {
+	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
+	validator := services.PasswordValidatorFunc(mockPasswordValidator)
+
+	t.Run("Test Check is User's password", func(t *testing.T) {
+		t.Parallel()
+
+		testUserIsUserPassword(t, idGen, validator)
+	})
+	t.Run("Test Change Password", func(t *testing.T) {
+		t.Parallel()
+
+		testUserChangePassword(t, idGen, validator)
+	})
+}
+
+func testUserIsUserPassword(t *testing.T,
+	idGen services.IdGenerator,
+	validator services.PasswordValidator,
+) {
+	t.Helper()
+
 	t.Run("PASS if same", func(t *testing.T) {
 		t.Parallel()
 
-		validator := services.PasswordValidatorFunc(mockPasswordValidator)
-
 		password := "password"
-
-		user := models.NewUser("12345", "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password)
 
 		if same := user.IsUserPassword(password, validator); !same {
 			t.Errorf("Wanted %v, got %v", true, same)
@@ -25,12 +45,9 @@ func TestUserIsUserPassword(t *testing.T) {
 	t.Run("FAIL if not same", func(t *testing.T) {
 		t.Parallel()
 
-		validator := services.PasswordValidatorFunc(mockPasswordValidator)
-
 		password := "password"
 		anotherPassword := "yetAnotherPassword"
-
-		user := models.NewUser("12345", "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password)
 
 		if same := user.IsUserPassword(anotherPassword, validator); same {
 			t.Errorf("Wanted %v, got %v", false, same)
@@ -38,17 +55,18 @@ func TestUserIsUserPassword(t *testing.T) {
 	})
 }
 
-func TestUserChangePassword(t *testing.T) {
-	t.Parallel()
+func testUserChangePassword(t *testing.T,
+	idGen services.IdGenerator,
+	validator services.PasswordValidator,
+) {
+	t.Helper()
+
 	t.Run("PASS if changed", func(t *testing.T) {
 		t.Parallel()
 
-		validator := services.PasswordValidatorFunc(mockPasswordValidator)
-
 		want := "newPassword"
 		password := "password"
-
-		user := models.NewUser("12345", "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password)
 
 		if err := user.ChangePassword(password, want, validator); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
@@ -61,13 +79,10 @@ func TestUserChangePassword(t *testing.T) {
 	t.Run("FAIL if incorrect current password", func(t *testing.T) {
 		t.Parallel()
 
-		validator := services.PasswordValidatorFunc(mockPasswordValidator)
-
 		password := "password"
 		wrongPassword := "wrong"
 		newPassword := "yetAnotherPassword"
-
-		user := models.NewUser("12345", "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password)
 
 		if err := user.ChangePassword(wrongPassword, newPassword, validator); err == nil {
 			t.Errorf("Wanted err, got %v", nil)

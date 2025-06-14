@@ -8,12 +8,12 @@ import (
 
 type Collection struct {
 	documents map[string]Document
+	id        string
+	userId    string
 	name      string
-	userUid   string
-	id        uint64
 }
 
-func NewCollection(id uint64, name, userUid string, documents []Document) *Collection {
+func NewCollection(id, userId, name string, documents []Document) *Collection {
 	documentsMap := make(map[string]Document, len(documents))
 	for _, document := range documents {
 		documentsMap[document.name] = document
@@ -21,24 +21,24 @@ func NewCollection(id uint64, name, userUid string, documents []Document) *Colle
 
 	return &Collection{
 		documents: documentsMap,
-		name:      name,
-		userUid:   userUid,
 		id:        id,
+		userId:    userId,
+		name:      name,
 	}
 }
 
-func NewEmptyCollection(id uint64, name, userUid string) *Collection {
+func NewEmptyCollection(id, userId, name string) *Collection {
 	return &Collection{
 		documents: make(map[string]Document, 0),
-		name:      name,
-		userUid:   userUid,
 		id:        id,
+		userId:    userId,
+		name:      name,
 	}
 }
 
 func (c *Collection) AddDocument(document Document) error {
 	if _, present := c.documents[document.name]; present {
-		return fmt.Errorf("models/collection.AddDocument: [Collection No%d already contains Document %q]", c.id, document.name)
+		return fmt.Errorf("models/collection.AddDocument: [Collection No%q already contains Document %q]", c.id, document.name)
 	}
 	c.documents[document.name] = document
 
@@ -48,7 +48,7 @@ func (c *Collection) AddDocument(document Document) error {
 func (c *Collection) FindDocument(name string) (Document, error) {
 	document, present := c.documents[name]
 	if !present {
-		return document, fmt.Errorf("models/collection.AddDocument: [Collection No%d doesn't contain Document %q]", c.id, name)
+		return document, fmt.Errorf("models/collection.FindDocument: [Collection No%q doesn't contain Document %q]", c.id, name)
 	}
 
 	return document, nil
@@ -56,7 +56,7 @@ func (c *Collection) FindDocument(name string) (Document, error) {
 
 func (c *Collection) RemoveDocument(name string) error {
 	if _, present := c.documents[name]; !present {
-		return fmt.Errorf("models/collection.RemoveDocument: [Collection No%d doesn't contain Document %q]", c.id, name)
+		return fmt.Errorf("models/collection.RemoveDocument: [Collection No%q doesn't contain Document %q]", c.id, name)
 	}
 	delete(c.documents, name)
 
@@ -67,14 +67,14 @@ func (c *Collection) Documents() []Document {
 	return slices.Collect(maps.Values(c.documents))
 }
 
+func (c *Collection) Id() string {
+	return c.id
+}
+
+func (c *Collection) UserId() string {
+	return c.userId
+}
+
 func (c *Collection) Name() string {
 	return c.name
-}
-
-func (c *Collection) UserUid() string {
-	return c.userUid
-}
-
-func (c *Collection) Id() uint64 {
-	return c.id
 }

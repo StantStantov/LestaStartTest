@@ -1,11 +1,60 @@
 services:
   web:
+    hostname: LestaStartApp
     image: stant/lesta-start-app:prod
     build:
       context: ../../
       dockerfile: build/app.dockerfile
       target: runner
+    networks:
+      - lesta-start-net
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - lesta-start-app:${DOCUMENTS_PATH}
+    env_file:
+      - ./.env
     environment:
-      SERVER_PORT: ${SERVER_PORT? SERVER_PORT not set}
+      SERVER_PORT: ${SERVER_PORT?}
+      DATABASE_URL: ${DATABASE_URL?}
+      DOCUMENTS_PATH: ${DOCUMENTS_PATH?}
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
+
+  db:
+    hostname: ${PS_HOST}
+    image: stant/lesta-start-db:prod
+    build: 
+      context: ../..
+      dockerfile: build/db.dockerfile
+      target: runner
+      secrets:
+        - "ps_user"
+        - "ps_password"
+        - "ps_db"
+    networks:
+      - lesta-start-net
+    volumes:
+      - lesta-start-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h ${PS_HOST} -U ${PS_USER} -d ${PS_DB}"]
+      interval: 5s
+      timeout: 1s
+      retries: 10
+
+networks:
+  lesta-start-net:
+    driver: bridge
+
+volumes:
+  lesta-start-app:
+  lesta-start-db:
+
+secrets:
+  ps_user:
+    environment: "PS_USER"
+  ps_password:
+    environment: "PS_PASSWORD"
+  ps_db:
+    environment: "PS_DB"
