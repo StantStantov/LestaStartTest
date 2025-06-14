@@ -1,4 +1,4 @@
-package services
+package tfidf
 
 import (
 	"bufio"
@@ -7,15 +7,15 @@ import (
 	"math"
 )
 
-func ProcessReaderToTerms(file io.Reader) ([]string, error) {
+func ProcessReaderToTerms(data io.Reader) ([]string, error) {
 	text := []string{}
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(data)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
 		text = append(text, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("Services/wordFrequencyService.ProcessReaderToTerms: [%w]",err)
+		return nil, fmt.Errorf("tfidf/tfidfSerivce.ProcessReaderToTerms: [%w]", err)
 	}
 	return text, nil
 }
