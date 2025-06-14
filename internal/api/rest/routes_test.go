@@ -1,19 +1,30 @@
+//go:build integration || !unit
+
 package rest_test
 
 import (
 	"Stant/LestaGamesInternship/internal/api/rest"
+	"Stant/LestaGamesInternship/internal/app/config"
 	"Stant/LestaGamesInternship/internal/app/valueObjects"
-	"Stant/LestaGamesInternship/internal/domain/stores"
+	"Stant/LestaGamesInternship/internal/infra/pgsql"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
+	"context"
 	"encoding/json"
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"runtime/debug"
 	"testing"
 )
 
 func TestRestApi(t *testing.T) {
-	metricsStore := stores.NewInMemoryMetricStore()
+	ctx := context.Background()
+
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
+	tx := apptest.GetTestTx(t, ctx, dbPool)
+
+	metricsStore := pgsql.NewMetricStore(tx)
 
 	router := http.NewServeMux()
 	rest.SetupRestRouter(router, metricsStore)
