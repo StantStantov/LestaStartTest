@@ -6,7 +6,7 @@ type MetricName string
 
 const (
 	FilesProcessed MetricName = "files_processed"
-	TimeProcessed             = "time_processed"
+	TimeProcessed  MetricName = "time_processed"
 )
 
 type Metric struct {

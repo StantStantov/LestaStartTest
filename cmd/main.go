@@ -2,12 +2,14 @@ package main
 
 import (
 	"Stant/LestaGamesInternship/internal/api/rest"
-	"Stant/LestaGamesInternship/internal/api/web"
 	"Stant/LestaGamesInternship/internal/app/config"
-	"Stant/LestaGamesInternship/internal/domain/stores"
+	"Stant/LestaGamesInternship/internal/infra/pgsql"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -17,12 +19,16 @@ func main() {
 		return
 	}
 
-	inMemoryTermStore := stores.NewInMemoryTermStore()
-	inMemoryMetricStore := stores.NewInMemoryMetricStore()
+	dbPool, err := pgxpool.New(context.Background(), appConfig.DatabaseUrl())
+	if err != nil {
+		log.Printf("cmd/main.main: [%v]", err)
+		return
+	}
+
+	metricStore := pgsql.NewMetricStore(dbPool)
 
 	router := http.NewServeMux()
-	web.SetupWebRouter(router, inMemoryMetricStore, inMemoryTermStore)
-	rest.SetupRestRouter(router, inMemoryMetricStore)
+	rest.SetupRestRouter(router, metricStore)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", appConfig.ServerPort()),

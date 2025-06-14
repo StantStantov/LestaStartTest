@@ -1,30 +1,44 @@
+//go:build integration || !unit
+
 package middlewares_test
 
 import (
-	"Stant/LestaGamesInternship/internal/api/web/middlewares"
+	"Stant/LestaGamesInternship/internal/api/rest/middlewares"
+	"Stant/LestaGamesInternship/internal/app/config"
+	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/stores"
+	"Stant/LestaGamesInternship/internal/infra/pgsql"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
 func TestCollectMetrics(t *testing.T) {
+	ctx := context.Background()
+
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
+
 	t.Run("Collect if OK", func(t *testing.T) {
-		t.Helper()
+		t.Parallel()
 
-		wantLength := 2
+		tx := apptest.GetTestTx(t, ctx, dbPool)
+		metricStore := pgsql.NewMetricStore(tx)
 
-		metricStore := stores.NewInMemoryMetricStore()
+		wantLength := 1
+
 		router := newMockRouter(metricStore)
 		request, err := http.NewRequest(http.MethodPost, "/good", nil)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 		router.ServeHTTP(httptest.NewRecorder(), request)
 
-		metrics, err := metricStore.ReadAll()
+		metrics, err := metricStore.FindAllByName(ctx, models.FilesProcessed)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 		gotLength := len(metrics)
 
@@ -33,26 +47,20 @@ func TestCollectMetrics(t *testing.T) {
 		}
 	})
 	t.Run("Do nothing if Error", func(t *testing.T) {
-		t.Helper()
+		t.Parallel()
 
-		wantLength := 0
+		tx := apptest.GetTestTx(t, ctx, dbPool)
+		metricStore := pgsql.NewMetricStore(tx)
 
-		metricStore := stores.NewInMemoryMetricStore()
 		router := newMockRouter(metricStore)
 		request, err := http.NewRequest(http.MethodPost, "/bad", nil)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 		router.ServeHTTP(httptest.NewRecorder(), request)
 
-		metrics, err := metricStore.ReadAll()
-		if err != nil {
-			t.Fatal(err)
-		}
-		gotLength := len(metrics)
-
-		if wantLength != gotLength {
-			t.Errorf("Wanted %d, got %d", wantLength, gotLength)
+		if _, err := metricStore.FindAllByName(ctx, models.FilesProcessed); err == nil {
+			t.Errorf("Wanted err, got %v", err)
 		}
 	})
 }
