@@ -238,11 +238,12 @@ func (s *CollectionStore) scanCollection(ctx context.Context, rows pgx.Rows) (*m
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("pgsql/collectionStore.scanCollection: [%w]", err)
 	}
-	if rows.CommandTag().RowsAffected() == 0 {
-		return nil, fmt.Errorf("pgsql/collectionStore.scanCollection: [Rows are empty]")
-	}
 
-	return models.NewCollection(id, userId, name, documents), nil
+	collection := models.NewCollection(id, userId, name, documents)
+	if rows.CommandTag().RowsAffected() == 0 {
+		return collection, fmt.Errorf("pgsql/collectionStore.scanCollection: [%w]", pgx.ErrNoRows)
+	}
+	return collection, nil
 }
 
 func (s *CollectionStore) scanCollections(ctx context.Context, rows pgx.Rows) ([]*models.Collection, error) {
@@ -280,13 +281,9 @@ func (s *CollectionStore) scanCollections(ctx context.Context, rows pgx.Rows) ([
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("pgsql/collectionStore.scanCollections: [%w]", err)
 	}
-	if rows.CommandTag().RowsAffected() == 0 {
-		return nil, fmt.Errorf("pgsql/collectionStore.scanCollections: [Rows are empty]")
-	}
 
+	if rows.CommandTag().RowsAffected() == 0 {
+		return collections, fmt.Errorf("pgsql/collectionStore.scanCollections: [%w]", pgx.ErrNoRows)
+	}
 	return collections, nil
 }
-
-// func (s *CollectionStore) formatDocumentName(id, userId, documentName string) string {
-// 	return fmt.Sprintf("%s_%s_%s", id, userId, documentName)
-// }

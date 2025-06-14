@@ -87,7 +87,7 @@ func (s *MetricStore) FindAllByTimestamp(ctx context.Context, timestamp time.Tim
 	}
 
 	metrics, err := s.scanMetrics(rows)
-	if  err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("pgsql/metricStore.FindAllByTimestamp: [%w]", err)
 	}
 
@@ -108,7 +108,7 @@ func (s *MetricStore) FindAllByName(ctx context.Context, name models.MetricName)
 	}
 
 	metrics, err := s.scanMetrics(rows)
-	if  err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("pgsql/metricStore.FindAllByName: [%w]", err)
 	}
 
@@ -141,9 +141,9 @@ func (s *MetricStore) scanMetrics(rows pgx.Rows) ([]models.Metric, error) {
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("pgsql/metricStore.scanMetrics: [%w]", err)
 	}
-	if rows.CommandTag().RowsAffected() == 0 {
-		return nil, fmt.Errorf("pgsql/collectionStore.scanMetrics: [Rows are empty]")
-	}
 
+	if rows.CommandTag().RowsAffected() == 0 {
+		return metrics, fmt.Errorf("pgsql/collectionStore.scanMetrics: [%w]", pgx.ErrNoRows)
+	}
 	return metrics, nil
 }
