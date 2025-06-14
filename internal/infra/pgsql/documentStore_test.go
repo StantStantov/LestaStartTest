@@ -3,6 +3,7 @@
 package pgsql_test
 
 import (
+	"Stant/LestaGamesInternship/internal/app/config"
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/services"
 	"Stant/LestaGamesInternship/internal/domain/stores"
@@ -24,12 +25,12 @@ func TestDocumentStore(t *testing.T) {
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
 	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text())
 
-	dbPool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	dirpath := createTempDir(t, os.Getenv("DOCUMENTS_PATH"), "DocumentStore")
+	dirpath := createTempDir(t, os.Getenv(config.PathToDocsEnv), "DocumentStore")
 	fileStore := volume.NewFileStore(dirpath)
 
 	t.Run("Test Save Document", func(t *testing.T) {

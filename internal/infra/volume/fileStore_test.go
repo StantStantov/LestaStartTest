@@ -3,6 +3,7 @@
 package volume_test
 
 import (
+	"Stant/LestaGamesInternship/internal/app/config"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/volume"
 	"crypto/rand"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestFileStore(t *testing.T) {
-	dirpath := filepath.Join(os.Getenv("DOCUMENTS_PATH"), "FileStore")
+	dirpath := filepath.Join(os.Getenv(config.PathToDocsEnv), "FileStore")
 	if err := os.RemoveAll(dirpath); err != nil {
 		t.Fatal(err)
 	}

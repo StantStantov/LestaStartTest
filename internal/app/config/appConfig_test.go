@@ -1,57 +1,131 @@
-package config_test
+//go:build unit || !integration
+
+package config
 
 import (
-	"Stant/LestaGamesInternship/internal/app/config"
 	"os"
 	"testing"
 )
 
-func TestReadConfig(t *testing.T) {
-	t.Run("Test reading server port", func(t *testing.T) {
-		testReadServerPort(t)
-	})
-}
+func TestReadServerPort(t *testing.T) {
+	t.Parallel()
 
-func testReadServerPort(t *testing.T) {
-	t.Run("Pass if port is correct", func(t *testing.T) {
-		wantPort := "9090"
+	t.Run("PASS if port is correct", func(t *testing.T) {
+		t.Parallel()
 
-		err := os.Setenv("SERVER_PORT", wantPort)
+		want := "9090"
+
+		err := os.Setenv(ServerPortEnv, want)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 
-		config, err := config.ReadAppConfig()
+		got, err := readServerPort()
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
-		gotPort := config.ServerPort()
 
-		if wantPort != gotPort {
-			t.Errorf("Wanted %s, got %s", wantPort, gotPort)
+		if want != got {
+			t.Errorf("Wanted %s, got %s", want, got)
 		}
 	})
-	t.Run("Fail if port not set", func(t *testing.T) {
-		os.Unsetenv("SERVER_PORT")
+	t.Run("FAIL if port not set", func(t *testing.T) {
+		t.Parallel()
 
-		_, err := config.ReadAppConfig()
+		if err := os.Unsetenv(ServerPortEnv); err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		_, err := readServerPort()
 		if err == nil {
 			t.Fatalf("Wanted err, got nil")
 		}
 	})
-	t.Run("Fail if port is incorrect", func(t *testing.T) {
+	t.Run("FAIL if port is incorrect", func(t *testing.T) {
+		t.Parallel()
+
 		ports := []string{"", "2000000", "tseta"}
 
 		for _, port := range ports {
-			err := os.Setenv("SERVER_PORT", port)
+			err := os.Setenv(ServerPortEnv, port)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("Wanted %v, got %v", nil, err)
 			}
 
-			_, err = config.ReadAppConfig()
+			_, err = readServerPort()
 			if err == nil {
-				t.Fatalf("Wanted err, got nil with %s", port)
+				t.Errorf("Wanted err, got %v", err)
 			}
+		}
+	})
+}
+
+func TestReadDbUrl(t *testing.T) {
+	t.Parallel()
+
+	t.Run("PASS if read", func(t *testing.T) {
+		t.Parallel()
+
+		want := "postgres://john:secret@localhost:5432/db"
+
+		if err := os.Setenv(DatabaseUrlEnv, want); err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		got, err := readDatabaseUrl()
+		if err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		if want != got {
+			t.Errorf("Wanted %s, got %s", want, got)
+		}
+	})
+	t.Run("FAIL if not set", func(t *testing.T) {
+		t.Parallel()
+
+		if err := os.Unsetenv(DatabaseUrlEnv); err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		_, err := readDatabaseUrl()
+		if err == nil {
+			t.Errorf("Wanted err, got %v", err)
+		}
+	})
+}
+
+func TestReadPathToDocs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("PASS if read", func(t *testing.T) {
+		t.Parallel()
+
+		want := "/documents"
+
+		if err := os.Setenv(PathToDocsEnv, want); err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		got, err := readPathToDocuments()
+		if err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		if want != got {
+			t.Errorf("Wanted %s, got %s", want, got)
+		}
+	})
+	t.Run("FAIL if not set", func(t *testing.T) {
+		t.Parallel()
+
+		if err := os.Unsetenv(PathToDocsEnv); err != nil {
+			t.Fatalf("Wanted %v, got %v", nil, err)
+		}
+
+		_, err := readPathToDocuments()
+		if err == nil {
+			t.Errorf("Wanted err, got %v", err)
 		}
 	})
 }

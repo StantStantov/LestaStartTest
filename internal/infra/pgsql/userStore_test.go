@@ -3,6 +3,7 @@
 package pgsql_test
 
 import (
+	"Stant/LestaGamesInternship/internal/app/config"
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/services"
 	"Stant/LestaGamesInternship/internal/domain/stores"
@@ -17,7 +18,7 @@ import (
 
 func TestUserStore(t *testing.T) {
 	ctx := context.Background()
-	dbPool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
 	if err != nil {
 		t.Fatal(err)
 	}
