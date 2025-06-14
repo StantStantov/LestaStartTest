@@ -5,6 +5,8 @@ COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
   go mod download
 
+FROM base AS test
+
 FROM base AS build
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
