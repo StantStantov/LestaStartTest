@@ -9,6 +9,7 @@ import (
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/pgsql"
 	"Stant/LestaGamesInternship/internal/infra/volume"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
 	"cmp"
 	"context"
 	"crypto/rand"
@@ -16,24 +17,19 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestCollectionStore(t *testing.T) {
 	ctx := context.Background()
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
 	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text())
-	file := createTempFile(t, "")
+	file := apptest.CreateTestFile(t, "")
 	document := models.NewDocument(idGen.GenerateId(), user.Id(), filepath.Base(file.Name()), file)
 
-	dirpath := createTempDir(t, os.Getenv(config.PathToDocsEnv), "CollectionStore")
+	dirpath := apptest.CreateTestDir(t, os.Getenv(config.PathToDocsEnv), "CollectionStore")
 	fileStore := volume.NewFileStore(dirpath)
 
-	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
-	if err != nil {
-		t.Fatal(err)
-	}
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
 	userStore := pgsql.NewUserStore(dbPool)
 	if err := userStore.Register(ctx, user); err != nil {
@@ -48,42 +44,42 @@ func TestCollectionStore(t *testing.T) {
 	t.Run("Test Save Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStoreSave(t, ctx, tx, documentStore, idGen, user, document)
 	})
 	t.Run("Test Find Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStoreFind(t, ctx, tx, documentStore, idGen, user, document)
 	})
 	t.Run("Test Pin Document to Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStorePin(t, ctx, tx, documentStore, idGen, user, document)
 	})
 	t.Run("Test Unpin Document From Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStoreUnpin(t, ctx, tx, documentStore, idGen, user, document)
 	})
 	t.Run("Test Rename Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStoreRename(t, ctx, tx, documentStore, idGen, user, document)
 	})
 	t.Run("Test Delete Collection", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		testCollectionStoreDelete(t, ctx, tx, documentStore, idGen, user, document)
 	})
@@ -92,7 +88,7 @@ func TestCollectionStore(t *testing.T) {
 func testCollectionStoreSave(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -101,7 +97,7 @@ func testCollectionStoreSave(
 	t.Helper()
 
 	t.Run("PASS if saved", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		want := true
@@ -124,7 +120,7 @@ func testCollectionStoreSave(
 		}
 	})
 	t.Run("FAIL if duplicate", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		id := idGen.GenerateId()
@@ -145,7 +141,7 @@ func testCollectionStoreSave(
 func testCollectionStoreFind(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -161,7 +157,7 @@ func testCollectionStoreFind(
 	}
 
 	t.Run("PASS if found by ID", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		wantId := idGen.GenerateId()
@@ -192,7 +188,7 @@ func testCollectionStoreFind(
 		}
 	})
 	t.Run("PASS if found by User ID", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		wantUserId := user.Id()
@@ -238,7 +234,7 @@ func testCollectionStoreFind(
 		}
 	})
 	t.Run("FAIL if ID doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if _, err := collectionStore.FindById(ctx, ""); err == nil {
@@ -246,7 +242,7 @@ func testCollectionStoreFind(
 		}
 	})
 	t.Run("FAIL if User ID doesn't have collections", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if _, err := collectionStore.FindByUserId(ctx, ""); err == nil {
@@ -258,7 +254,7 @@ func testCollectionStoreFind(
 func testCollectionStorePin(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -267,7 +263,7 @@ func testCollectionStorePin(
 	t.Helper()
 
 	t.Run("PASS if pinned", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		want := true
@@ -293,7 +289,7 @@ func testCollectionStorePin(
 		}
 	})
 	t.Run("FAIL if Document already pinned", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		id := idGen.GenerateId()
@@ -310,7 +306,7 @@ func testCollectionStorePin(
 		}
 	})
 	t.Run("FAIL if Collection doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if err := collectionStore.PinDocument(ctx, "", document.Id()); err == nil {
@@ -322,7 +318,7 @@ func testCollectionStorePin(
 func testCollectionStoreUnpin(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -331,7 +327,7 @@ func testCollectionStoreUnpin(
 	t.Helper()
 
 	t.Run("PASS if unpinned", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		want := false
@@ -357,7 +353,7 @@ func testCollectionStoreUnpin(
 		}
 	})
 	t.Run("FAIL if Collection doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if err := collectionStore.UnpinDocument(ctx, "", document.Id()); err == nil {
@@ -365,7 +361,7 @@ func testCollectionStoreUnpin(
 		}
 	})
 	t.Run("FAIL if Document doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		id := idGen.GenerateId()
@@ -386,7 +382,7 @@ func testCollectionStoreUnpin(
 func testCollectionStoreRename(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -395,7 +391,7 @@ func testCollectionStoreRename(
 	t.Helper()
 
 	t.Run("PASS if renamed", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		id := idGen.GenerateId()
@@ -413,7 +409,7 @@ func testCollectionStoreRename(
 		}
 	})
 	t.Run("FAIL if doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if err := collectionStore.Rename(ctx, "", rand.Text()); err == nil {
@@ -425,7 +421,7 @@ func testCollectionStoreRename(
 func testCollectionStoreDelete(
 	t *testing.T,
 	ctx context.Context,
-	dbconn pgsql.DBConn,
+	dbConn pgsql.DBConn,
 	documentStore stores.DocumentStore,
 	idGen services.IdGenerator,
 	user models.User,
@@ -434,7 +430,7 @@ func testCollectionStoreDelete(
 	t.Helper()
 
 	t.Run("PASS if deleted", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		want := false
@@ -467,7 +463,7 @@ func testCollectionStoreDelete(
 		}
 	})
 	t.Run("FAIL if doesn't exist", func(t *testing.T) {
-		tx := getTestTx(t, dbconn, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
 		if err := collectionStore.Delete(ctx, ""); err == nil {

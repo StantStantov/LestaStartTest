@@ -8,25 +8,22 @@ import (
 	"Stant/LestaGamesInternship/internal/domain/services"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/pgsql"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
 	"context"
 	"crypto/rand"
 	"os"
 	"testing"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestUserStore(t *testing.T) {
 	ctx := context.Background()
-	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
 	t.Run("Test Register User", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		userStore := pgsql.NewUserStore(tx)
 
 		testUserStoreRegister(t, ctx, userStore)
@@ -34,7 +31,7 @@ func TestUserStore(t *testing.T) {
 	t.Run("Test Find User", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		userStore := pgsql.NewUserStore(tx)
 
 		testUserStoreFind(t, ctx, userStore)
@@ -42,7 +39,7 @@ func TestUserStore(t *testing.T) {
 	t.Run("Test Update User", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		userStore := pgsql.NewUserStore(tx)
 
 		testUserStoreUpdate(t, ctx, userStore)
@@ -50,7 +47,7 @@ func TestUserStore(t *testing.T) {
 	t.Run("Test Deregister User", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		userStore := pgsql.NewUserStore(tx)
 
 		testUserStoreDeregister(t, ctx, userStore)

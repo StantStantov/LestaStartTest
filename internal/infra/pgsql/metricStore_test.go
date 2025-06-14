@@ -7,27 +7,23 @@ import (
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/pgsql"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
 	"context"
 	"os"
 	"slices"
 	"testing"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestMetricStore(t *testing.T) {
 	ctx := context.Background()
 
-	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
-	if err != nil {
-		t.Fatal(err)
-	}
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
 	t.Run("Test Track Metric", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		metricStore := pgsql.NewMetricStore(tx)
 
 		testMetricStoreTrack(t, ctx, metricStore)
@@ -35,7 +31,7 @@ func TestMetricStore(t *testing.T) {
 	t.Run("Test Read Metric", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		metricStore := pgsql.NewMetricStore(tx)
 
 		testMetricStoreFind(t, ctx, metricStore)
@@ -43,7 +39,7 @@ func TestMetricStore(t *testing.T) {
 	t.Run("Test ReadAll Metrics", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 		metricStore := pgsql.NewMetricStore(tx)
 
 		testMetricStoreFindAll(t, ctx, metricStore)

@@ -9,6 +9,7 @@ import (
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/pgsql"
 	"Stant/LestaGamesInternship/internal/infra/volume"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
 	"context"
 	"crypto/rand"
 	"io"
@@ -16,27 +17,22 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestDocumentStore(t *testing.T) {
 	ctx := context.Background()
+
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
 	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text())
+	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
-	dbPool, err := pgxpool.New(ctx, os.Getenv(config.DatabaseUrlEnv))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	dirpath := createTempDir(t, os.Getenv(config.PathToDocsEnv), "DocumentStore")
+	dirpath := apptest.CreateTestDir(t, os.Getenv(config.PathToDocsEnv), "DocumentStore")
 	fileStore := volume.NewFileStore(dirpath)
 
 	t.Run("Test Save Document", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		userStore := pgsql.NewUserStore(tx)
 		if err := userStore.Register(ctx, user); err != nil {
@@ -50,7 +46,7 @@ func TestDocumentStore(t *testing.T) {
 	t.Run("Test Open Document", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		userStore := pgsql.NewUserStore(tx)
 		if err := userStore.Register(ctx, user); err != nil {
@@ -64,7 +60,7 @@ func TestDocumentStore(t *testing.T) {
 	t.Run("Test Rename Document", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		userStore := pgsql.NewUserStore(tx)
 		if err := userStore.Register(ctx, user); err != nil {
@@ -78,7 +74,7 @@ func TestDocumentStore(t *testing.T) {
 	t.Run("Test Delete Document", func(t *testing.T) {
 		t.Parallel()
 
-		tx := getTestTx(t, dbPool, ctx)
+		tx := apptest.GetTestTx(t, ctx, dbPool)
 
 		userStore := pgsql.NewUserStore(tx)
 		if err := userStore.Register(ctx, user); err != nil {
@@ -101,7 +97,7 @@ func testDocumentStoreSave(t *testing.T,
 
 	t.Run("PASS if saved", func(t *testing.T) {
 		want := true
-		file := createTempFile(t, "")
+		file := apptest.CreateTestFile(t, "")
 		id := idGen.GenerateId()
 		userId := user.Id()
 		filename := filepath.Base(file.Name())
@@ -127,7 +123,7 @@ func testDocumentStoreSave(t *testing.T,
 		}
 	})
 	t.Run("FAIL if already exists", func(t *testing.T) {
-		file := createTempFile(t, "")
+		file := apptest.CreateTestFile(t, "")
 		id := idGen.GenerateId()
 		userId := user.Id()
 		filename := filepath.Base(file.Name())
@@ -152,7 +148,7 @@ func testDocumentStoreOpen(t *testing.T,
 
 	t.Run("PASS if opened", func(t *testing.T) {
 		strBuilder := new(strings.Builder)
-		file := createTempFile(t, "")
+		file := apptest.CreateTestFile(t, "")
 		wantId := idGen.GenerateId()
 		wantUserId := user.Id()
 		wantName := filepath.Base(file.Name())
@@ -197,7 +193,7 @@ func testDocumentStoreRename(t *testing.T,
 	t.Helper()
 
 	t.Run("PASS if renamed", func(t *testing.T) {
-		file := createTempFile(t, "")
+		file := apptest.CreateTestFile(t, "")
 		id := idGen.GenerateId()
 		userId := user.Id()
 		fileName := filepath.Base(file.Name())
@@ -227,7 +223,7 @@ func testDocumentStoreDelete(t *testing.T,
 	t.Helper()
 
 	t.Run("PASS if deleted", func(t *testing.T) {
-		file := createTempFile(t, "")
+		file := apptest.CreateTestFile(t, "")
 		id := idGen.GenerateId()
 		userId := user.Id()
 		fileName := filepath.Base(file.Name())

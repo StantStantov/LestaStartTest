@@ -6,25 +6,16 @@ import (
 	"Stant/LestaGamesInternship/internal/app/config"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"Stant/LestaGamesInternship/internal/infra/volume"
+	"Stant/LestaGamesInternship/internal/pkg/apptest"
 	"crypto/rand"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
 
 func TestFileStore(t *testing.T) {
-	dirpath := filepath.Join(os.Getenv(config.PathToDocsEnv), "FileStore")
-	if err := os.RemoveAll(dirpath); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(dirpath, 0770); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(dirpath); err != nil {
-		t.Fatal(err)
-	}
+	dirpath := apptest.CreateTestDir(t, os.Getenv(config.PathToDocsEnv), "FileStore")
 	fileStore := volume.NewFileStore(dirpath)
 
 	t.Run("Test Save File", func(t *testing.T) {
