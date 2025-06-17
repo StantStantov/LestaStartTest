@@ -81,12 +81,32 @@ const selectUserById = `
 	;
 `
 
-func (s *UserStore) Find(ctx context.Context, id string) (models.User, error) {
+func (s *UserStore) FindById(ctx context.Context, id string) (models.User, error) {
 	row := s.dbConn.QueryRow(ctx, selectUserById, id)
 
 	user, err := s.scanUser(row)
 	if err != nil {
-		return models.User{}, fmt.Errorf("pgsql/userStore.Find: [%w]", err)
+		return models.User{}, fmt.Errorf("pgsql/userStore.FindById: [%w]", err)
+	}
+
+	return user, nil
+}
+
+const selectUserByName = `
+	SELECT 
+	id, username, password
+	FROM lesta_start.users	
+	WHERE username = $1
+	LIMIT 1
+	;
+`
+
+func (s *UserStore) FindByName(ctx context.Context, name string) (models.User, error) {
+	row := s.dbConn.QueryRow(ctx, selectUserByName, name)
+
+	user, err := s.scanUser(row)
+	if err != nil {
+		return models.User{}, fmt.Errorf("pgsql/userStore.FindByName: [%w]", err)
 	}
 
 	return user, nil

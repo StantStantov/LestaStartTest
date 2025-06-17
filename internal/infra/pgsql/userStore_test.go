@@ -101,7 +101,7 @@ func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserS
 		if err := userStore.Register(ctx, want); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
-		got, err := userStore.Find(ctx, want.Id())
+		got, err := userStore.FindById(ctx, want.Id())
 		if err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
@@ -113,7 +113,7 @@ func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserS
 	t.Run("FAIL if not present", func(t *testing.T) {
 		want := models.User{}
 
-		got, err := userStore.Find(ctx, rand.Text())
+		got, err := userStore.FindById(ctx, rand.Text())
 		if err == nil {
 			t.Errorf("Wanted err, got %v", err)
 		}
@@ -127,7 +127,7 @@ func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserS
 func testUserStoreUpdate(t *testing.T, ctx context.Context, userStore stores.UserStore) {
 	t.Helper()
 
-	mockValidator := services.PasswordValidatorFunc(func(s1, s2 string) error { return nil })
+	mockValidator := services.PasswordValidatorFunc(func(s1, s2 string) (bool, error) { return true, nil })
 
 	t.Run("PASS if updated", func(t *testing.T) {
 		want := models.NewUser(rand.Text(), rand.Text(), rand.Text())
