@@ -90,10 +90,10 @@ func testUserChangePassword(t *testing.T,
 	})
 }
 
-func mockPasswordValidator(s1, s2 string) error {
+func mockPasswordValidator(s1, s2 string) (bool, error) {
 	if s1 != s2 {
-		return fmt.Errorf("%s != %s", s1, s2)
+		return false, fmt.Errorf("%s != %s", s1, s2)
 	}
 
-	return nil
+	return true, nil
 }

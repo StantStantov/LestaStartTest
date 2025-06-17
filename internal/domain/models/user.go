@@ -20,16 +20,21 @@ func NewUser(id, name, password string) User {
 }
 
 func (u *User) IsUserPassword(password string, validator services.PasswordValidator) bool {
-	if err := validator.ComparePasswords(u.hashedPassword, password); err != nil {
+	ok, err := validator.ComparePasswords(u.hashedPassword, password)
+	if err != nil {
 		return false
 	}
 
-	return true
+	return ok
 }
 
 func (u *User) ChangePassword(currentPassword, newPassword string, validator services.PasswordValidator) error {
-	if err := validator.ComparePasswords(u.hashedPassword, currentPassword); err != nil {
+	ok, err := validator.ComparePasswords(u.hashedPassword, currentPassword)
+	if err != nil {
 		return fmt.Errorf("models/user.ChangePassword: [%w]", err)
+	}
+	if !ok {
+		return fmt.Errorf("models/user.ChangePassword: [%v]", "Passwords are different")
 	}
 	u.hashedPassword = newPassword
 

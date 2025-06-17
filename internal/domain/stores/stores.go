@@ -41,9 +41,17 @@ type UserStore interface {
 	Register(ctx context.Context, user models.User) error
 	IsIdRegistered(ctx context.Context, id string) (bool, error)
 	IsNameRegistered(ctx context.Context, name string) (bool, error)
-	Find(ctx context.Context, id string) (models.User, error)
+	FindById(ctx context.Context, id string) (models.User, error)
+	FindByName(ctx context.Context, name string) (models.User, error)
 	Update(ctx context.Context, user models.User) error
 	Deregister(ctx context.Context, id string) error
+}
+
+type SessionStore interface {
+	Create(ctx context.Context, session models.Session) error
+	Find(ctx context.Context, token string) (models.Session, error)
+	Delete(ctx context.Context, token string) error
+	DeleteAllExpired() error
 }
 
 type MetricStore interface {
