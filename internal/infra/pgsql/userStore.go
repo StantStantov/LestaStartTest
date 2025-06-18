@@ -2,6 +2,7 @@ package pgsql
 
 import (
 	"Stant/LestaGamesInternship/internal/domain/models"
+	"Stant/LestaGamesInternship/internal/domain/services"
 	"context"
 	"fmt"
 
@@ -10,10 +11,11 @@ import (
 
 type UserStore struct {
 	dbConn DBConn
+	psEncrypter services.PasswordEncrypter
 }
 
-func NewUserStore(conn DBConn) *UserStore {
-	return &UserStore{dbConn: conn}
+func NewUserStore(conn DBConn, encrypter services.PasswordEncrypter) *UserStore {
+	return &UserStore{dbConn: conn, psEncrypter: encrypter}
 }
 
 const insertUser = `
@@ -81,12 +83,32 @@ const selectUserById = `
 	;
 `
 
-func (s *UserStore) Find(ctx context.Context, id string) (models.User, error) {
+func (s *UserStore) FindById(ctx context.Context, id string) (models.User, error) {
 	row := s.dbConn.QueryRow(ctx, selectUserById, id)
 
 	user, err := s.scanUser(row)
 	if err != nil {
-		return models.User{}, fmt.Errorf("pgsql/userStore.Find: [%w]", err)
+		return models.User{}, fmt.Errorf("pgsql/userStore.FindById: [%w]", err)
+	}
+
+	return user, nil
+}
+
+const selectUserByName = `
+	SELECT 
+	id, username, password
+	FROM lesta_start.users	
+	WHERE username = $1
+	LIMIT 1
+	;
+`
+
+func (s *UserStore) FindByName(ctx context.Context, name string) (models.User, error) {
+	row := s.dbConn.QueryRow(ctx, selectUserByName, name)
+
+	user, err := s.scanUser(row)
+	if err != nil {
+		return models.User{}, fmt.Errorf("pgsql/userStore.FindByName: [%w]", err)
 	}
 
 	return user, nil
@@ -137,11 +159,11 @@ func (s *UserStore) scanUser(row pgx.Row) (models.User, error) {
 	var (
 		id       string
 		name     string
-		password string
+		hashedPassword string
 	)
-	if err := row.Scan(&id, &name, &password); err != nil {
+	if err := row.Scan(&id, &name, &hashedPassword); err != nil {
 		return models.User{}, fmt.Errorf("pgsql/userStore.scanUser: [%w]", err)
 	}
 
-	return models.NewUser(id, name, password), nil
+	return models.NewEncryptedUser(id, name, hashedPassword), nil
 }

@@ -11,27 +11,54 @@ type User struct {
 	hashedPassword string
 }
 
-func NewUser(id, name, password string) User {
+func NewUser(
+	id,
+	name,
+	password string,
+	passwordEncrypter services.PasswordEncrypter,
+) User {
 	return User{
 		id:             id,
 		name:           name,
-		hashedPassword: password,
+		hashedPassword: passwordEncrypter.Encrypt(password),
+	}
+}
+
+func NewEncryptedUser(
+	id,
+	name,
+	hashedPassword string,
+) User {
+	return User{
+		id:             id,
+		name:           name,
+		hashedPassword: hashedPassword,
 	}
 }
 
 func (u *User) IsUserPassword(password string, validator services.PasswordValidator) bool {
-	if err := validator.ComparePasswords(u.hashedPassword, password); err != nil {
+	ok, err := validator.ComparePasswords(u.hashedPassword, password)
+	if err != nil {
 		return false
 	}
 
-	return true
+	return ok
 }
 
-func (u *User) ChangePassword(currentPassword, newPassword string, validator services.PasswordValidator) error {
-	if err := validator.ComparePasswords(u.hashedPassword, currentPassword); err != nil {
+func (u *User) ChangePassword(
+	currentPassword,
+	newPassword string,
+	validator services.PasswordValidator,
+	encrypter services.PasswordEncrypter,
+) error {
+	ok, err := validator.ComparePasswords(u.hashedPassword, currentPassword)
+	if err != nil {
 		return fmt.Errorf("models/user.ChangePassword: [%w]", err)
 	}
-	u.hashedPassword = newPassword
+	if !ok {
+		return fmt.Errorf("models/user.ChangePassword: [%v]", "Passwords are different")
+	}
+	u.hashedPassword = encrypter.Encrypt(newPassword)
 
 	return nil
 }

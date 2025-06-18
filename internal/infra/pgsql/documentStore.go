@@ -98,6 +98,26 @@ func (s *DocumentStore) IsIdExist(ctx context.Context, id string) (bool, error) 
 	return isExist, nil
 }
 
+const checkIsDocumentOwnedByUserId = `
+	SELECT EXISTS ( 
+	SELECT 1
+	FROM lesta_start.documents
+	WHERE user_id = $1 AND id = $2
+	LIMIT 1)
+	;
+`
+
+func (s *DocumentStore) IsOwned(ctx context.Context, userId, documentId string) (bool, error) {
+	isExist := false
+
+	row := s.dbConn.QueryRow(ctx, checkIsDocumentOwnedByUserId, userId, documentId)
+	if err := row.Scan(&isExist); err != nil {
+		return false, fmt.Errorf("pgsql/documentStore.IsOwned: [%w]", err)
+	}
+
+	return isExist, nil
+}
+
 func (s *DocumentStore) Open(ctx context.Context, id string) (models.Document, error) {
 	row := s.dbConn.QueryRow(ctx, selectDocumentById, id)
 
@@ -107,6 +127,38 @@ func (s *DocumentStore) Open(ctx context.Context, id string) (models.Document, e
 	}
 
 	return document, nil
+}
+
+const selectDocumentsByUserId = `
+	SELECT id, user_id, document
+	FROM lesta_start.documents
+	WHERE user_id = $1
+	;
+`
+
+func (s *DocumentStore) OpenAll(ctx context.Context, userId string) ([]models.Document, error) {
+	rows, err := s.dbConn.Query(ctx, selectDocumentsByUserId, userId)
+	if err != nil {
+		return nil, fmt.Errorf("pgsql/documentStore.OpenAll: [%w]", err)
+	}
+
+	documents := []models.Document{}
+	for rows.Next() {
+		document, err := s.scanDocument(rows)
+		if err != nil {
+			return nil, fmt.Errorf("pgsql/documentStore.OpenAll: [%w]", err)
+		}
+
+		documents = append(documents, document)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("pgsql/documentStore.OpenAll: [%w]", err)
+	}
+
+	if rows.CommandTag().RowsAffected() == 0 {
+		return documents, fmt.Errorf("pgsql/documentStore.OpenAll: [%w]", pgx.ErrNoRows)
+	}
+	return documents, nil
 }
 
 const updateDocumentById = `

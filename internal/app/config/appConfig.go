@@ -8,20 +8,26 @@ import (
 )
 
 const (
-	ServerPortEnv  = "SERVER_PORT"
-	DatabaseUrlEnv = "DATABASE_URL"
-	PathToDocsEnv  = "DOCUMENTS_PATH"
+	ServerDomainEnv = "SERVER_DOMAIN"
+	ServerPortEnv   = "SERVER_PORT"
+	DatabaseUrlEnv  = "DATABASE_URL"
+	PathToDocsEnv   = "DOCUMENTS_PATH"
 )
 
 type AppConfig struct {
-	version    string
-	serverPort string
-	dbUrl      string
-	pathToDocs string
+	version      string
+	serverDomain string
+	serverPort   string
+	dbUrl        string
+	pathToDocs   string
 }
 
 func (c *AppConfig) Version() string {
 	return c.version
+}
+
+func (c *AppConfig) ServerDomain() string {
+	return c.serverDomain
 }
 
 func (c *AppConfig) ServerPort() string {
@@ -42,6 +48,11 @@ func ReadAppConfig() (*AppConfig, error) {
 		return nil, fmt.Errorf("config/appConfig.ReadAppConfig: [Didn't manage to read build info]")
 	}
 
+	domain, err := readServerDomain()
+	if err != nil {
+		return nil, fmt.Errorf("config/appConfig.ReadAppConfig: [%w]", err)
+	}
+
 	serverPort, err := readServerPort()
 	if err != nil {
 		return nil, fmt.Errorf("config/appConfig.ReadAppConfig: [%w]", err)
@@ -58,10 +69,11 @@ func ReadAppConfig() (*AppConfig, error) {
 	}
 
 	return &AppConfig{
-		version:    buildInfo.Main.Version,
-		serverPort: serverPort,
-		dbUrl:      dbUrl,
-		pathToDocs: pathToDocs,
+		version:      buildInfo.Main.Version,
+		serverDomain: domain,
+		serverPort:   serverPort,
+		dbUrl:        dbUrl,
+		pathToDocs:   pathToDocs,
 	}, nil
 }
 
@@ -84,6 +96,15 @@ func readServerPort() (string, error) {
 	}
 
 	return serverPort, nil
+}
+
+func readServerDomain() (string, error) {
+	domain, ok := os.LookupEnv(ServerDomainEnv)
+	if !ok {
+		return "", fmt.Errorf("config/appConfig.readServerDomain: [ENV %s is not defined]", ServerDomainEnv)
+	}
+
+	return domain, nil
 }
 
 func readDatabaseUrl() (string, error) {

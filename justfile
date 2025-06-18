@@ -1,5 +1,5 @@
 set dotenv-load := true
-set dotenv-required := true
+set dotenv-required := false
 
 export COMPOSE_BAKE := "true"
 export GOCACHE := `go env GOCACHE`

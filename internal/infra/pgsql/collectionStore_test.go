@@ -21,8 +21,10 @@ import (
 
 func TestCollectionStore(t *testing.T) {
 	ctx := context.Background()
+
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
-	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text())
+	encrypter := services.PasswordEncrypterFunc(func(s string) string { return s })
+	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text(), encrypter)
 	file := apptest.CreateTestFile(t, "")
 	document := models.NewDocument(idGen.GenerateId(), user.Id(), filepath.Base(file.Name()), file)
 
@@ -31,7 +33,7 @@ func TestCollectionStore(t *testing.T) {
 
 	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
-	userStore := pgsql.NewUserStore(dbPool)
+	userStore := pgsql.NewUserStore(dbPool, encrypter)
 	if err := userStore.Register(ctx, user); err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +171,7 @@ func testCollectionStoreFind(
 		if err := collectionStore.Save(ctx, *want); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
-		got, err := collectionStore.FindById(ctx, wantId)
+		got, err := collectionStore.Find(ctx, wantId)
 		if err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
@@ -204,7 +206,7 @@ func testCollectionStoreFind(
 				t.Fatalf("Wanted %v, got %v", nil, err)
 			}
 		}
-		got, err := collectionStore.FindByUserId(ctx, wantUserId)
+		got, err := collectionStore.FindAllByUserId(ctx, wantUserId)
 		if err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
@@ -237,7 +239,7 @@ func testCollectionStoreFind(
 		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
-		if _, err := collectionStore.FindById(ctx, ""); err == nil {
+		if _, err := collectionStore.Find(ctx, ""); err == nil {
 			t.Fatalf("Wanted err, got %v", err)
 		}
 	})
@@ -245,7 +247,7 @@ func testCollectionStoreFind(
 		tx := apptest.GetTestTx(t, ctx, dbConn)
 		collectionStore := pgsql.NewCollectionStore(tx, documentStore)
 
-		if _, err := collectionStore.FindByUserId(ctx, ""); err == nil {
+		if _, err := collectionStore.Find(ctx, ""); err == nil {
 			t.Fatalf("Wanted err, got %v", err)
 		}
 	})

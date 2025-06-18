@@ -1,8 +1,9 @@
-package rest
+package handlers
 
 import (
-	"Stant/LestaGamesInternship/internal/app/services/metricService"
-	"Stant/LestaGamesInternship/internal/app/valueObjects"
+	"Stant/LestaGamesInternship/internal/api/rest/dto"
+	"Stant/LestaGamesInternship/internal/app/config"
+	"Stant/LestaGamesInternship/internal/app/services/mtrcserv"
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"encoding/json"
@@ -10,49 +11,42 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/jackc/pgx/v5"
 )
-
-func SetupRestRouter(router *http.ServeMux, metricsStore stores.MetricStore) {
-	router.Handle("GET /api/status", HandleGetStatus())
-	router.Handle("GET /api/metrics", HandleGetMetrics(metricsStore))
-	router.Handle("GET /api/version", HandleGetVerstion())
-}
 
 func HandleGetStatus() http.HandlerFunc {
 	const status = `{"status": "OK"}`
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, status)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, status)
 	})
 }
 
 func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
-	metricsJson := valueObjects.AppMetrics{}
+	metricsJson := dto.AppMetrics{}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		filesMetrics, err := metricsStore.FindAllByName(r.Context(), models.FilesProcessed)
 		if err != nil && errors.Unwrap(errors.Unwrap(err)) != pgx.ErrNoRows {
-			log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
+			log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
 			http.Error(w, "Failed to access database", http.StatusInternalServerError)
 			return
 		}
 		timeMetrics, err := metricsStore.FindAllByName(r.Context(), models.TimeProcessed)
 		if err != nil && errors.Unwrap(errors.Unwrap(err)) != pgx.ErrNoRows {
-			log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
+			log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
 			http.Error(w, "Failed to access database", http.StatusInternalServerError)
 			return
 		}
 
 		if len(filesMetrics) != 0 {
-			filesProcessedCount := metricService.SumValues(filesMetrics)
-			latestFileProcessed, err := metricService.FindMaxByTimestamp(filesMetrics)
+			filesProcessedCount := mtrcserv.SumValues(filesMetrics)
+			latestFileProcessed, err := mtrcserv.FindMaxByTimestamp(filesMetrics)
 			if err != nil {
-				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
+				log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}
@@ -62,16 +56,16 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 		}
 
 		if len(timeMetrics) != 0 {
-			timeProcessedCount := metricService.SumValues(timeMetrics)
-			minTimeProcessed, err := metricService.FindMinByValue(timeMetrics)
+			timeProcessedCount := mtrcserv.SumValues(timeMetrics)
+			minTimeProcessed, err := mtrcserv.FindMinByValue(timeMetrics)
 			if err != nil {
-				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
+				log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}
-			maxTimeProcessed, err := metricService.FindMaxByValue(timeMetrics)
+			maxTimeProcessed, err := mtrcserv.FindMaxByValue(timeMetrics)
 			if err != nil {
-				log.Printf("rest/routes.HandleGetMetrics: [%v]", err)
+				log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
 				http.Error(w, "Failed to get metrics", http.StatusInternalServerError)
 				return
 			}
@@ -81,19 +75,20 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 			metricsJson.MaxTimeProcessed = maxTimeProcessed
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(metricsJson); err != nil {
+			log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(metricsJson)
 	})
 }
 
-func HandleGetVerstion() http.HandlerFunc {
-	info, _ := debug.ReadBuildInfo()
-	version := fmt.Sprintf(`{"version": "%s"}`, info.Main.Version)
+func HandleGetVersion(config *config.AppConfig) http.HandlerFunc {
+	version := fmt.Sprintf(`{"version": "%s"}`, config.Version())
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, version)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, version)
 	})
 }

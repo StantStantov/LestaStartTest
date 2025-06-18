@@ -13,7 +13,9 @@ type CollectionStore interface {
 	PinDocument(ctx context.Context, collectionId, documentId string) error
 	IsExist(ctx context.Context, id string) (bool, error)
 	IsPinned(ctx context.Context, collectionId, documentId string) (bool, error)
+	IsOwned(ctx context.Context, userId, collectionId string) (bool, error)
 	Find(ctx context.Context, id string) (*models.Collection, error)
+	FindAllByDocumentId(ctx context.Context, documentId string) ([]*models.Collection, error)
 	FindAllByUserId(ctx context.Context, userId string) ([]*models.Collection, error)
 	Rename(ctx context.Context, id, newName string) error
 	UnpinDocument(ctx context.Context, collectionId, documentId string) error
@@ -24,7 +26,9 @@ type DocumentStore interface {
 	Save(ctx context.Context, document models.Document) error
 	IsIdExist(ctx context.Context, id string) (bool, error)
 	IsNameExist(ctx context.Context, userId, name string) (bool, error)
+	IsOwned(ctx context.Context, userId, documentId string) (bool, error)
 	Open(ctx context.Context, id string) (models.Document, error)
+	OpenAll(ctx context.Context, userId string) ([]models.Document, error)
 	Rename(ctx context.Context, id, newName string) error
 	Delete(ctx context.Context, id string) error
 }
@@ -41,9 +45,17 @@ type UserStore interface {
 	Register(ctx context.Context, user models.User) error
 	IsIdRegistered(ctx context.Context, id string) (bool, error)
 	IsNameRegistered(ctx context.Context, name string) (bool, error)
-	Find(ctx context.Context, id string) (models.User, error)
+	FindById(ctx context.Context, id string) (models.User, error)
+	FindByName(ctx context.Context, name string) (models.User, error)
 	Update(ctx context.Context, user models.User) error
 	Deregister(ctx context.Context, id string) error
+}
+
+type SessionStore interface {
+	Create(ctx context.Context, session models.Session) error
+	Find(ctx context.Context, token string) (models.Session, error)
+	Delete(ctx context.Context, token string) error
+	DeleteAllExpired() error
 }
 
 type MetricStore interface {

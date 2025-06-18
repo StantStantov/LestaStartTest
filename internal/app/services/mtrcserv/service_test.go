@@ -1,9 +1,9 @@
 //go:build unit || !integration
 
-package metricService_test
+package mtrcserv_test
 
 import (
-	"Stant/LestaGamesInternship/internal/app/services/metricService"
+	"Stant/LestaGamesInternship/internal/app/services/mtrcserv"
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"testing"
 	"time"
@@ -39,7 +39,7 @@ func testSumValues(t *testing.T) {
 	}
 
 	want := 4.0
-	got := metricService.SumValues(metrics)
+	got := mtrcserv.SumValues(metrics)
 	if got != want {
 		t.Errorf("Wanted %f, got %f", want, got)
 	}
@@ -57,7 +57,7 @@ func testFindMaxByValue(t *testing.T) {
 		models.NewMetric(timestamp, models.TimeProcessed, want),
 		models.NewMetric(timestamp, models.TimeProcessed, 5.9),
 	}
-	got, err := metricService.FindMaxByValue(metrics)
+	got, err := mtrcserv.FindMaxByValue(metrics)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func testFindMaxByTimestamp(t *testing.T) {
 		models.NewMetric(timestamp, models.TimeProcessed, 13.2),
 		models.NewMetric(timestamp, models.TimeProcessed, 5.9),
 	}
-	got, err := metricService.FindMaxByTimestamp(metrics)
+	got, err := mtrcserv.FindMaxByTimestamp(metrics)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func testFindMinByValue(t *testing.T) {
 		models.NewMetric(timestamp, models.TimeProcessed, 3.6),
 		models.NewMetric(timestamp, models.TimeProcessed, 5.9),
 	}
-	got, err := metricService.FindMinByValue(metrics)
+	got, err := mtrcserv.FindMinByValue(metrics)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func testFindMinByTimestamp(t *testing.T) {
 		models.NewMetric(want, models.TimeProcessed, 3.6),
 		models.NewMetric(timestamp, models.TimeProcessed, 5.9),
 	}
-	got, err := metricService.FindMinByTimestamp(metrics)
+	got, err := mtrcserv.FindMinByTimestamp(metrics)
 	if err != nil {
 		t.Fatal(err)
 	}

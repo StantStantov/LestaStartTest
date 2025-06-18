@@ -23,7 +23,8 @@ func TestDocumentStore(t *testing.T) {
 	ctx := context.Background()
 
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
-	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text())
+	encrypter := services.PasswordEncrypterFunc(func(s string) string { return s })
+	user := models.NewUser(idGen.GenerateId(), rand.Text(), rand.Text(), encrypter)
 	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
 
 	dirpath := apptest.CreateTestDir(t, os.Getenv(config.PathToDocsEnv), "DocumentStore")
@@ -34,7 +35,7 @@ func TestDocumentStore(t *testing.T) {
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
 
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatal(err)
 		}
@@ -48,7 +49,7 @@ func TestDocumentStore(t *testing.T) {
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
 
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatal(err)
 		}
@@ -62,7 +63,7 @@ func TestDocumentStore(t *testing.T) {
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
 
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatal(err)
 		}
@@ -76,7 +77,7 @@ func TestDocumentStore(t *testing.T) {
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
 
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatal(err)
 		}
@@ -98,6 +99,8 @@ func testDocumentStoreSave(t *testing.T,
 	t.Run("PASS if saved", func(t *testing.T) {
 		want := true
 		file := apptest.CreateTestFile(t, "")
+		file.WriteString("hello, documents")
+		file.Seek(0, 0)
 		id := idGen.GenerateId()
 		userId := user.Id()
 		filename := filepath.Base(file.Name())
