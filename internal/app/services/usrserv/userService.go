@@ -1,10 +1,11 @@
-package users
+package usrserv
 
 import (
 	"Stant/LestaGamesInternship/internal/domain/models"
 	"Stant/LestaGamesInternship/internal/domain/services"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"context"
+	"fmt"
 )
 
 type UserService struct {
@@ -64,10 +65,35 @@ func (s *UserService) IsRegistered(ctx context.Context, username, password strin
 	return user.IsUserPassword(password, s.psValidator), nil
 }
 
+func (s *UserService) ChangePassword(ctx context.Context, userId, oldPassword, newPassword string) error {
+	user, err := s.userStore.FindById(ctx, userId)
+	if err != nil {
+		return fmt.Errorf("users/userService.ChangePassword: [%w]", err)
+	}
+
+	if err := user.ChangePassword(oldPassword, newPassword, s.psValidator, s.psEncrypter); err != nil {
+		return fmt.Errorf("users/userService.ChangePassword: [%w]", err)
+	}
+
+	if err := s.userStore.Update(ctx, user); err != nil {
+		return fmt.Errorf("users/userService.ChangePassword: [%w]", err)
+	}
+
+	return nil
+}
+
+func (s *UserService) Deregister(ctx context.Context, userId string) error {
+	if err := s.userStore.Deregister(ctx, userId); err != nil {
+		return fmt.Errorf("users/userService.Deregister: [%w]", err)
+	}
+	return nil
+}
+
 func (s *UserService) newUser(username, password string) models.User {
 	return models.NewUser(
 		s.idGen.GenerateId(),
 		username,
-		s.psEncrypter.Encrypt(password),
+		password,
+		s.psEncrypter,
 	)
 }

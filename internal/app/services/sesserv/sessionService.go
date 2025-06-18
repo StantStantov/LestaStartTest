@@ -1,4 +1,4 @@
-package sessions
+package sesserv
 
 import (
 	"Stant/LestaGamesInternship/internal/domain/models"
@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -49,16 +48,13 @@ func (s *SessionService) Start(r *http.Request) (models.Session, error) {
 	cookie, err := r.Cookie(s.sessionCookieName)
 	if err == nil {
 		token := cookie.Value
-		log.Printf("token: %v", token)
 		session, err = s.sessionStore.Find(r.Context(), token)
-		log.Printf("found : %v", session)
 		if err != nil {
 			return models.Session{}, fmt.Errorf("[%w]", err)
 		}
 	}
 
 	if session == (models.Session{}) || s.IsExpired(session) {
-		log.Println("Is empty or expired")
 		session = s.newSession(nil)
 	}
 
@@ -138,7 +134,7 @@ func (s *SessionService) SetSessionCookie(w http.ResponseWriter, session models.
 }
 
 func (s *SessionService) ExpireSessionCookie(w http.ResponseWriter, session models.Session) {
-	sessionCookie := newExpiredSecureCookie(s.sessionCookieName, "", s.domain)
+	sessionCookie := newExpiredSecureCookie(s.sessionCookieName, session.Token(), s.domain)
 
 	http.SetCookie(w, sessionCookie)
 }
@@ -150,7 +146,7 @@ func (s *SessionService) SetCsrfCookie(w http.ResponseWriter, session models.Ses
 }
 
 func (s *SessionService) ExpireCsrfCookie(w http.ResponseWriter, session models.Session) {
-	csrfCookie := newExpiredSecureCookie(s.csrfCookieName, "", s.domain)
+	csrfCookie := newExpiredSecureCookie(s.csrfCookieName, session.CsrfToken(), s.domain)
 
 	http.SetCookie(w, csrfCookie)
 }

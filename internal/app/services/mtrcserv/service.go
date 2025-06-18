@@ -1,4 +1,4 @@
-package metricService
+package mtrcserv
 
 import (
 	"Stant/LestaGamesInternship/internal/domain/models"
@@ -19,7 +19,7 @@ func SumValues(metrics []models.Metric) float64 {
 
 func FindMaxByValue(metrics []models.Metric) (float64, error) {
 	if len(metrics) == 0 {
-		return 0, fmt.Errorf("Services/metricService.FindMaxByValue: [metrics are empty]")
+		return 0, fmt.Errorf("Metrics/service.FindMaxByValue: [metrics are empty]")
 	}
 
 	return slices.MaxFunc(metrics, compareByValue).Value(), nil
@@ -27,7 +27,7 @@ func FindMaxByValue(metrics []models.Metric) (float64, error) {
 
 func FindMaxByTimestamp(metrics []models.Metric) (time.Time, error) {
 	if len(metrics) == 0 {
-		return time.Time{}, fmt.Errorf("Services/metricService.FindMaxByTimestamp: [metrics are empty]")
+		return time.Time{}, fmt.Errorf("Metrics/service.FindMaxByTimestamp: [metrics are empty]")
 	}
 
 	return slices.MaxFunc(metrics, compareByTimestamp).Timestamp(), nil
@@ -35,7 +35,7 @@ func FindMaxByTimestamp(metrics []models.Metric) (time.Time, error) {
 
 func FindMinByValue(metrics []models.Metric) (float64, error) {
 	if len(metrics) == 0 {
-		return 0, fmt.Errorf("Services/metricService.FindMinByValue: [metrics are empty]")
+		return 0, fmt.Errorf("Metrics/service.FindMinByValue: [metrics are empty]")
 	}
 
 	return slices.MinFunc(metrics, compareByValue).Value(), nil
@@ -43,7 +43,7 @@ func FindMinByValue(metrics []models.Metric) (float64, error) {
 
 func FindMinByTimestamp(metrics []models.Metric) (time.Time, error) {
 	if len(metrics) == 0 {
-		return time.Time{}, fmt.Errorf("Services/metricService.FindMinByTimestamp: [metrics are empty]")
+		return time.Time{}, fmt.Errorf("Metrics/service.FindMinByTimestamp: [metrics are empty]")
 	}
 
 	return slices.MinFunc(metrics, compareByTimestamp).Timestamp(), nil
