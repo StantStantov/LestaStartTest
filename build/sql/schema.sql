@@ -27,9 +27,18 @@ CREATE TABLE IF NOT EXISTS collection_documents (
   PRIMARY KEY (collection_id, document_id)
 );
 
+CREATE TABLE sessions (
+	token TEXT PRIMARY KEY,
+  user_id TEXT NULL REFERENCES users(id) ON DELETE CASCADE,
+	csrf_token TEXT NOT NULL UNIQUE,
+	expire_on TIMESTAMP NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS metrics (
   timestamp TIMESTAMP NOT NULL,
   name TEXT NOT NULL,
   value DOUBLE PRECISION NOT NULL,
   PRIMARY KEY (timestamp, name)
 );
+
+CREATE INDEX sessions_expire_on_idx ON sessions (expire_on);
