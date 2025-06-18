@@ -2,6 +2,7 @@ package pgsql
 
 import (
 	"Stant/LestaGamesInternship/internal/domain/models"
+	"Stant/LestaGamesInternship/internal/domain/services"
 	"context"
 	"fmt"
 
@@ -10,10 +11,11 @@ import (
 
 type UserStore struct {
 	dbConn DBConn
+	psEncrypter services.PasswordEncrypter
 }
 
-func NewUserStore(conn DBConn) *UserStore {
-	return &UserStore{dbConn: conn}
+func NewUserStore(conn DBConn, encrypter services.PasswordEncrypter) *UserStore {
+	return &UserStore{dbConn: conn, psEncrypter: encrypter}
 }
 
 const insertUser = `
@@ -157,11 +159,11 @@ func (s *UserStore) scanUser(row pgx.Row) (models.User, error) {
 	var (
 		id       string
 		name     string
-		password string
+		hashedPassword string
 	)
-	if err := row.Scan(&id, &name, &password); err != nil {
+	if err := row.Scan(&id, &name, &hashedPassword); err != nil {
 		return models.User{}, fmt.Errorf("pgsql/userStore.scanUser: [%w]", err)
 	}
 
-	return models.NewUser(id, name, password), nil
+	return models.NewEncryptedUser(id, name, hashedPassword), nil
 }

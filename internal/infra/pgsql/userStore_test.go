@@ -19,47 +19,48 @@ func TestUserStore(t *testing.T) {
 	ctx := context.Background()
 
 	dbPool := apptest.GetTestPool(t, ctx, os.Getenv(config.DatabaseUrlEnv))
+	encrypter := services.PasswordEncrypterFunc(func(s string) string { return s })
 
 	t.Run("Test Register User", func(t *testing.T) {
 		t.Parallel()
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 
-		testUserStoreRegister(t, ctx, userStore)
+		testUserStoreRegister(t, ctx, userStore, encrypter)
 	})
 	t.Run("Test Find User", func(t *testing.T) {
 		t.Parallel()
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 
-		testUserStoreFind(t, ctx, userStore)
+		testUserStoreFind(t, ctx, userStore, encrypter)
 	})
 	t.Run("Test Update User", func(t *testing.T) {
 		t.Parallel()
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 
-		testUserStoreUpdate(t, ctx, userStore)
+		testUserStoreUpdate(t, ctx, userStore, encrypter)
 	})
 	t.Run("Test Deregister User", func(t *testing.T) {
 		t.Parallel()
 
 		tx := apptest.GetTestTx(t, ctx, dbPool)
-		userStore := pgsql.NewUserStore(tx)
+		userStore := pgsql.NewUserStore(tx, encrypter)
 
-		testUserStoreDeregister(t, ctx, userStore)
+		testUserStoreDeregister(t, ctx, userStore, encrypter)
 	})
 }
 
-func testUserStoreRegister(t *testing.T, ctx context.Context, userStore stores.UserStore) {
+func testUserStoreRegister(t *testing.T, ctx context.Context, userStore stores.UserStore, encrypter services.PasswordEncrypter) {
 	t.Helper()
 
 	t.Run("PASS if registered", func(t *testing.T) {
 		want := true
-		user := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		user := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
@@ -81,7 +82,7 @@ func testUserStoreRegister(t *testing.T, ctx context.Context, userStore stores.U
 		}
 	})
 	t.Run("FAIL if already present", func(t *testing.T) {
-		user := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		user := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
@@ -92,11 +93,11 @@ func testUserStoreRegister(t *testing.T, ctx context.Context, userStore stores.U
 	})
 }
 
-func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserStore) {
+func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserStore, encrypter services.PasswordEncrypter) {
 	t.Helper()
 
 	t.Run("PASS if found", func(t *testing.T) {
-		want := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		want := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Register(ctx, want); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
@@ -124,25 +125,25 @@ func testUserStoreFind(t *testing.T, ctx context.Context, userStore stores.UserS
 	})
 }
 
-func testUserStoreUpdate(t *testing.T, ctx context.Context, userStore stores.UserStore) {
+func testUserStoreUpdate(t *testing.T, ctx context.Context, userStore stores.UserStore, encrypter services.PasswordEncrypter) {
 	t.Helper()
 
 	mockValidator := services.PasswordValidatorFunc(func(s1, s2 string) (bool, error) { return true, nil })
 
 	t.Run("PASS if updated", func(t *testing.T) {
-		want := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		want := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Register(ctx, want); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 
-		want.ChangePassword(want.HashedPassword(), rand.Text(), mockValidator)
+		want.ChangePassword(want.HashedPassword(), rand.Text(), mockValidator, encrypter)
 		if err := userStore.Update(ctx, want); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 	})
 	t.Run("FAIL if not present", func(t *testing.T) {
-		want := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		want := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Update(ctx, want); err == nil {
 			t.Errorf("Wanted err, got %v", err)
@@ -150,12 +151,12 @@ func testUserStoreUpdate(t *testing.T, ctx context.Context, userStore stores.Use
 	})
 }
 
-func testUserStoreDeregister(t *testing.T, ctx context.Context, userStore stores.UserStore) {
+func testUserStoreDeregister(t *testing.T, ctx context.Context, userStore stores.UserStore, encrypter services.PasswordEncrypter) {
 	t.Helper()
 
 	t.Run("PASS if deregistered", func(t *testing.T) {
 		want := false
-		user := models.NewUser(rand.Text(), rand.Text(), rand.Text())
+		user := models.NewUser(rand.Text(), rand.Text(), rand.Text(), encrypter)
 
 		if err := userStore.Register(ctx, user); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)

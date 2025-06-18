@@ -32,8 +32,8 @@ func CreateTestFile(t *testing.T, prefix string) *os.File {
 	}
 
 	t.Cleanup(func() {
-		file.Close()
 		os.Remove(file.Name())
+		file.Close()
 	})
 
 	return file

@@ -108,6 +108,25 @@ func (s *CollectionStore) IsPinned(ctx context.Context, collectionId, documentId
 	return isExist, nil
 }
 
+const checkIsDocOwnedByUserId = `
+	SELECT EXISTS
+	(SELECT 1 FROM lesta_start.collections
+	WHERE user_id = $1 AND id = $2
+	LIMIT 1)
+	;
+`
+
+func (s *CollectionStore) IsOwned(ctx context.Context, userId, collectionId string) (bool, error) {
+	isExist := false
+
+	row := s.dbConn.QueryRow(ctx, checkIsDocOwnedByUserId, userId, collectionId)
+	if err := row.Scan(&isExist); err != nil {
+		return false, fmt.Errorf("pgsql/collectionStore.IsOwned: [%w]", err)
+	}
+
+	return isExist, nil
+}
+
 const selectCollectionById = `
 	SELECT c.id, c.user_id, c.collection, d.id
 	FROM lesta_start.collection_documents AS cd
@@ -117,18 +136,42 @@ const selectCollectionById = `
 	;
 `
 
-func (s *CollectionStore) FindById(ctx context.Context, id string) (*models.Collection, error) {
+func (s *CollectionStore) Find(ctx context.Context, id string) (*models.Collection, error) {
 	rows, err := s.dbConn.Query(ctx, selectCollectionById, id)
 	if err != nil {
-		return nil, fmt.Errorf("pgsql/collectionStore.FindById: [%w]", err)
+		return nil, fmt.Errorf("pgsql/collectionStore.Find: [%w]", err)
 	}
 
 	collection, err := s.scanCollection(ctx, rows)
 	if err != nil {
-		return nil, fmt.Errorf("pgsql/collectionStore.FindById: [%w]", err)
+		return nil, fmt.Errorf("pgsql/collectionStore.Find: [%w]", err)
 	}
 
 	return collection, nil
+}
+
+const selectCollectionsByDocumentId = `
+	SELECT c.id, c.user_id, c.collection, d.id
+	FROM lesta_start.collection_documents AS cd
+	INNER JOIN lesta_start.collections AS c ON c.id = cd.collection_id
+	INNER JOIN lesta_start.documents AS d ON d.id = cd.document_id
+	WHERE d.id = $1
+	ORDER BY c.id
+	;
+`
+
+func (s *CollectionStore) FindAllByDocumentId(ctx context.Context, documentId string) ([]*models.Collection, error) {
+	rows, err := s.dbConn.Query(ctx, selectCollectionsByDocumentId, documentId)
+	if err != nil {
+		return nil, fmt.Errorf("pgsql/collectionStore.FindAllByDocumentId: [%w]", err)
+	}
+
+	collections, err := s.scanCollections(ctx, rows)
+	if err != nil {
+		return nil, fmt.Errorf("pgsql/collectionStore.FindAllByDocumentId: [%w]", err)
+	}
+
+	return collections, nil
 }
 
 const selectCollectionsByUserId = `
@@ -141,7 +184,7 @@ const selectCollectionsByUserId = `
 	;
 `
 
-func (s *CollectionStore) FindByUserId(ctx context.Context, userId string) ([]*models.Collection, error) {
+func (s *CollectionStore) FindAllByUserId(ctx context.Context, userId string) ([]*models.Collection, error) {
 	rows, err := s.dbConn.Query(ctx, selectCollectionsByUserId, userId)
 	if err != nil {
 		return nil, fmt.Errorf("pgsql/collectionStore.FindByUserId: [%w]", err)
@@ -170,7 +213,7 @@ func (s *CollectionStore) Rename(ctx context.Context, id, newName string) error 
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("pgsql/collectionStore.Rename [%w]", err)
+		return fmt.Errorf("pgsql/collectionStore.Rename [%w]", pgx.ErrNoRows)
 	}
 
 	return nil
@@ -190,7 +233,7 @@ func (s *CollectionStore) UnpinDocument(ctx context.Context, collectionId, docum
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("pgsql/collectionStore.UnpinDocument [%w]", err)
+		return fmt.Errorf("pgsql/collectionStore.UnpinDocument [%w]", pgx.ErrNoRows)
 	}
 
 	return nil

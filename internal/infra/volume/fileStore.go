@@ -14,7 +14,7 @@ type FileStore struct {
 }
 
 func NewFileStore(dirpath string) *FileStore {
-	return &FileStore{}
+	return &FileStore{dirpath: dirpath}
 }
 
 func (s *FileStore) Save(filename string, data io.Reader) error {
@@ -36,7 +36,7 @@ func (s *FileStore) IsExist(filename string) (bool, error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		return false, fmt.Errorf("volume/fileStore.IsExist: [%w]", err)
 	}
-	if info == nil  {
+	if info == nil {
 		return false, fmt.Errorf("volume/fileStore.IsExist: [Couldn't Stat info about file %q]", filename)
 	}
 	return !info.IsDir(), nil
