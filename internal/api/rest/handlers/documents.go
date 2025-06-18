@@ -4,6 +4,7 @@ import (
 	"Stant/LestaGamesInternship/internal/api/rest/dto"
 	"Stant/LestaGamesInternship/internal/app/services/cllcsserv"
 	"Stant/LestaGamesInternship/internal/app/services/docserv"
+	"Stant/LestaGamesInternship/internal/app/services/huffman"
 	"Stant/LestaGamesInternship/internal/app/services/sesserv"
 	"Stant/LestaGamesInternship/internal/app/services/tfidf"
 	"Stant/LestaGamesInternship/internal/domain/models"
@@ -75,7 +76,7 @@ func HandleGetDocument(
 		}
 
 		accessable, err := documentService.HasAccess(r.Context(), *userId, documentId)
-		if  err != nil ||!accessable {
+		if err != nil || !accessable {
 			http.Error(w, `{"error": "User not authorized"}`, http.StatusUnauthorized)
 			return
 		}
@@ -152,7 +153,7 @@ func HandleGetDocumentStatistics(
 		}
 		userId := session.UserId()
 		if userId == nil {
-			http.Error(w, `{"error": "User ID empty"}`, http.StatusUnauthorized)
+			http.Error(w, `{"error": "User not authorized"}`, http.StatusUnauthorized)
 			return
 		}
 
@@ -163,7 +164,7 @@ func HandleGetDocumentStatistics(
 		}
 
 		accessable, err := documentService.HasAccess(r.Context(), *userId, documentId)
-		if  err != nil ||!accessable {
+		if err != nil || !accessable {
 			http.Error(w, `{"error": "User not authorized"}`, http.StatusUnauthorized)
 			return
 		}
@@ -220,6 +221,57 @@ func HandleGetDocumentStatistics(
 
 		if err := json.NewEncoder(w).Encode(body); err != nil {
 			log.Printf("handlers/documents.HandleGetDocumentStatistics: [%v]", err)
+			http.Error(w, `{"error": "Something went wrong"}`, http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
+func HandleGetDocumentHuffman(
+	pathValue string,
+	documentService *docserv.DocumentService,
+) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, ok := sesserv.GetSession(r.Context())
+		if !ok {
+			http.Error(w, `{"error": "Session does not exist"}`, http.StatusBadRequest)
+			return
+		}
+		userId := session.UserId()
+		if userId == nil {
+			http.Error(w, `{"error": "User not authorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		documentId := r.PathValue(pathValue)
+		if documentId == "" {
+			http.Error(w, `{"error": "Empty Document ID"}`, http.StatusBadRequest)
+			return
+		}
+
+		accessable, err := documentService.HasAccess(r.Context(), *userId, documentId)
+		if err != nil || !accessable {
+			http.Error(w, `{"error": "User not authorized"}`, http.StatusUnauthorized)
+			return
+		}
+
+		document, err := documentService.Get(r.Context(), documentId)
+		if err != nil {
+			log.Printf("handlers/documents.HandleGetDocumentHuffman: [%v]", err)
+			http.Error(w, `{"error": "Something went wrong"}`, http.StatusInternalServerError)
+			return
+		}
+		encoded, codesTable, err := huffman.Encode(document.File())
+		if err != nil {
+			log.Printf("handlers/documents.HandleGetDocumentHuffman: [%v]", err)
+			http.Error(w, `{"error": "Something went wrong"}`, http.StatusInternalServerError)
+			return
+		}
+
+		body := dto.HuffmanEncoding{Codes: codesTable, Data: encoded}
+		if err := json.NewEncoder(w).Encode(body); err != nil {
+			log.Printf("handlers/documents.HandleGetDocumentHuffman: [%v]", err)
 			http.Error(w, `{"error": "Something went wrong"}`, http.StatusInternalServerError)
 			return
 		}

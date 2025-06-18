@@ -18,6 +18,11 @@ type DocumentWithData struct {
 	Data string `json:"data"`
 }
 
+type HuffmanEncoding struct {
+	Codes map[string]string `json:"codes"`
+	Data  string            `json:"data"`
+}
+
 type Term struct {
 	Word string  `json:"word"`
 	Tf   uint64  `json:"tf"`

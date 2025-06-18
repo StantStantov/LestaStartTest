@@ -67,6 +67,10 @@ func SetupRestRouter(
 		checkSession(
 			requireAuth(
 				handlers.HandleGetDocumentStatistics("document_id", documentService, collectionService))))
+	router.Handle("GET /api/documents/{document_id}/huffman",
+		checkSession(
+			requireAuth(
+				handlers.HandleGetDocumentHuffman("document_id", documentService))))
 	router.Handle("GET /api/documents/",
 		checkSession(
 			requireAuth(
