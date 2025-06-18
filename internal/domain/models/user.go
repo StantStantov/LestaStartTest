@@ -11,11 +11,28 @@ type User struct {
 	hashedPassword string
 }
 
-func NewUser(id, name, password string) User {
+func NewUser(
+	id,
+	name,
+	password string,
+	passwordEncrypter services.PasswordEncrypter,
+) User {
 	return User{
 		id:             id,
 		name:           name,
-		hashedPassword: password,
+		hashedPassword: passwordEncrypter.Encrypt(password),
+	}
+}
+
+func NewEncryptedUser(
+	id,
+	name,
+	hashedPassword string,
+) User {
+	return User{
+		id:             id,
+		name:           name,
+		hashedPassword: hashedPassword,
 	}
 }
 
@@ -28,7 +45,12 @@ func (u *User) IsUserPassword(password string, validator services.PasswordValida
 	return ok
 }
 
-func (u *User) ChangePassword(currentPassword, newPassword string, validator services.PasswordValidator) error {
+func (u *User) ChangePassword(
+	currentPassword,
+	newPassword string,
+	validator services.PasswordValidator,
+	encrypter services.PasswordEncrypter,
+) error {
 	ok, err := validator.ComparePasswords(u.hashedPassword, currentPassword)
 	if err != nil {
 		return fmt.Errorf("models/user.ChangePassword: [%w]", err)
@@ -36,7 +58,7 @@ func (u *User) ChangePassword(currentPassword, newPassword string, validator ser
 	if !ok {
 		return fmt.Errorf("models/user.ChangePassword: [%v]", "Passwords are different")
 	}
-	u.hashedPassword = newPassword
+	u.hashedPassword = encrypter.Encrypt(newPassword)
 
 	return nil
 }

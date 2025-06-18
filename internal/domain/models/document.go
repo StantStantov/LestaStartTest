@@ -1,17 +1,17 @@
 package models
 
 import (
-	"os"
+	"io"
 )
 
 type Document struct {
 	id     string
 	userId string
 	name   string
-	file   *os.File
+	file   io.Reader
 }
 
-func NewDocument(id, userId, name string, file *os.File) Document {
+func NewDocument(id, userId, name string, file io.Reader) Document {
 	return Document{
 		id:     id,
 		userId: userId,
@@ -24,7 +24,7 @@ func (d *Document) Rename(newName string) {
 	d.name = newName
 }
 
-func (d *Document) Replace(file *os.File) {
+func (d *Document) Replace(file io.Reader) {
 	d.file = file
 }
 
@@ -40,6 +40,6 @@ func (d *Document) Name() string {
 	return d.name
 }
 
-func (d *Document) File() *os.File {
+func (d *Document) File() io.Reader {
 	return d.file
 }

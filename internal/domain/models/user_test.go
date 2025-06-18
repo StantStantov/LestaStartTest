@@ -13,22 +13,24 @@ import (
 func TestUser(t *testing.T) {
 	idGen := services.IdGeneratorFunc(func() string { return rand.Text() })
 	validator := services.PasswordValidatorFunc(mockPasswordValidator)
+	encrypter := services.PasswordEncrypterFunc(func(s string) string { return s })
 
 	t.Run("Test Check is User's password", func(t *testing.T) {
 		t.Parallel()
 
-		testUserIsUserPassword(t, idGen, validator)
+		testUserIsUserPassword(t, idGen, validator, encrypter)
 	})
 	t.Run("Test Change Password", func(t *testing.T) {
 		t.Parallel()
 
-		testUserChangePassword(t, idGen, validator)
+		testUserChangePassword(t, idGen, validator, encrypter)
 	})
 }
 
 func testUserIsUserPassword(t *testing.T,
 	idGen services.IdGenerator,
 	validator services.PasswordValidator,
+	encrypter services.PasswordEncrypter,
 ) {
 	t.Helper()
 
@@ -36,7 +38,7 @@ func testUserIsUserPassword(t *testing.T,
 		t.Parallel()
 
 		password := "password"
-		user := models.NewUser(idGen.GenerateId(), "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password, encrypter)
 
 		if same := user.IsUserPassword(password, validator); !same {
 			t.Errorf("Wanted %v, got %v", true, same)
@@ -47,7 +49,7 @@ func testUserIsUserPassword(t *testing.T,
 
 		password := "password"
 		anotherPassword := "yetAnotherPassword"
-		user := models.NewUser(idGen.GenerateId(), "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password, encrypter)
 
 		if same := user.IsUserPassword(anotherPassword, validator); same {
 			t.Errorf("Wanted %v, got %v", false, same)
@@ -58,6 +60,7 @@ func testUserIsUserPassword(t *testing.T,
 func testUserChangePassword(t *testing.T,
 	idGen services.IdGenerator,
 	validator services.PasswordValidator,
+	encrypter services.PasswordEncrypter,
 ) {
 	t.Helper()
 
@@ -66,9 +69,9 @@ func testUserChangePassword(t *testing.T,
 
 		want := "newPassword"
 		password := "password"
-		user := models.NewUser(idGen.GenerateId(), "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password, encrypter)
 
-		if err := user.ChangePassword(password, want, validator); err != nil {
+		if err := user.ChangePassword(password, want, validator, encrypter); err != nil {
 			t.Fatalf("Wanted %v, got %v", nil, err)
 		}
 		got := user.HashedPassword()
@@ -82,9 +85,9 @@ func testUserChangePassword(t *testing.T,
 		password := "password"
 		wrongPassword := "wrong"
 		newPassword := "yetAnotherPassword"
-		user := models.NewUser(idGen.GenerateId(), "test", password)
+		user := models.NewUser(idGen.GenerateId(), "test", password, encrypter)
 
-		if err := user.ChangePassword(wrongPassword, newPassword, validator); err == nil {
+		if err := user.ChangePassword(wrongPassword, newPassword, validator, encrypter); err == nil {
 			t.Errorf("Wanted err, got %v", nil)
 		}
 	})
