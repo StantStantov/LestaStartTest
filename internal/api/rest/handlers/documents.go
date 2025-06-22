@@ -20,6 +20,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// @Summary Загрузить документ
+// @Description Загружает переданный файл и закрепляет его за пользователем.
+// @Tags Документы
+// @Accept multipart/form-data
+// @Produce json
+// @Param files formData file true "Файл для загрузки" 
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/documents/ [post]
 func HandlePostDocument(
 	formFileKey string,
 	documentService *docserv.DocumentService,
@@ -53,6 +61,13 @@ func HandlePostDocument(
 	})
 }
 
+// @Summary Получить документ
+// @Description Получает информацию о документе.
+// @Tags Документы
+// @Produce json
+// @Param document_id path int true "ID документа"
+// @Success 200 {object} dto.DocumentWithData
+// @Router /api/documents/{document_id} [get]
 func HandleGetDocument(
 	pathValue string,
 	documentService *docserv.DocumentService,
@@ -104,6 +119,12 @@ func HandleGetDocument(
 	})
 }
 
+// @Summary Получить документы
+// @Description Получает информацию о документах, прикрепленные пользователем.
+// @Tags Документы
+// @Produce json
+// @Success 200 {array} dto.Document
+// @Router /api/documents/ [get]
 func HandleGetDocuments(
 	documentService *docserv.DocumentService,
 ) http.Handler {
@@ -140,6 +161,13 @@ func HandleGetDocuments(
 	})
 }
 
+// @Summary Получить статистику по документу
+// @Description Получает статистику по данному документку (с учётом коллекций, за которыми он закреплён).
+// @Tags Документы
+// @Produce json
+// @Param document_id path int true "ID документа"
+// @Success 200 {array} dto.Term
+// @Router /api/documents/{document_id}/statistics [get]
 func HandleGetDocumentStatistics(
 	pathValue string,
 	documentService *docserv.DocumentService,
@@ -228,6 +256,13 @@ func HandleGetDocumentStatistics(
 	})
 }
 
+// @Summary Кодирование документа алгоритмом Хаффмана
+// @Description Возвращает закодированное представление содержимого документа.
+// @Tags Документы
+// @Produce json
+// @Param document_id path int true "ID документа"
+// @Success 200 {object} dto.HuffmanEncoding
+// @Router /api/documents/{document_id}/huffman [get]
 func HandleGetDocumentHuffman(
 	pathValue string,
 	documentService *docserv.DocumentService,
@@ -279,6 +314,13 @@ func HandleGetDocumentHuffman(
 	})
 }
 
+// @Summary Удалить документ
+// @Description Удаляет документ, закрепленный за пользователем.
+// @Tags Документы
+// @Produce json
+// @Param document_id path int true "ID документа"
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/documents/{document_id} [delete]
 func HandleDeleteDocument(
 	pathValue string,
 	documentService *docserv.DocumentService,

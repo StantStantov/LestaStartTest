@@ -37,5 +37,8 @@ up-dev:
 up-prod:
   docker compose -f {{prod-compose}} up
 
+swagger:
+  swag init --dir ./cmd/,./internal/api/rest/ --parseInternal 
+
 deploy:
   docker --context {{remote-context}} stack deploy -c {{prod-compose}} lesta-start

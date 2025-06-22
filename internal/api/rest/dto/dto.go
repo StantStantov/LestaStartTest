@@ -36,3 +36,7 @@ type AppMetrics struct {
 	MaxTimeProcessed    float64    `json:"max_time_processed"`
 	LatestFileProcessed *time.Time `json:"latest_file_processed_timestamp"`
 }
+
+type SuccessMessage struct {
+	Value string `json:"success"`
+}

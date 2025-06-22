@@ -17,6 +17,13 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// @Summary Создать новую коллекцию 
+// @Description Создает новую коллекцию с переданным именем.
+// @Tags Коллекции
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/ [post]
 func HandlePostCollection(
 	collectionService *cllcsserv.CollectionService,
 ) http.Handler {
@@ -52,6 +59,13 @@ func HandlePostCollection(
 	})
 }
 
+// @Summary Получить коллекцию
+// @Description Получает информацию о коллекции пользователя.
+// @Tags Коллекции
+// @Produce json
+// @Param collection_id path int true "ID коллекции"
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/{collection_id} [get]
 func HandleGetCollection(
 	pathValue string,
 	collectionService *cllcsserv.CollectionService,
@@ -102,6 +116,13 @@ func HandleGetCollection(
 	})
 }
 
+// @Summary Получить статистику по коллекции
+// @Description Получает статистику по коллекции.
+// @Tags Коллекции
+// @Produce json
+// @Param collection_id path int true "ID коллекции"
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/{collection_id}/statistics [get]
 func HandleGetCollectionStatistics(
 	pathValue string,
 	collectionService *cllcsserv.CollectionService,
@@ -176,6 +197,12 @@ func HandleGetCollectionStatistics(
 	})
 }
 
+// @Summary Получить коллекции
+// @Description Получает информацию о всех коллекциях пользователя.
+// @Tags Коллекции
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/ [get]
 func HandleGetCollections(
 	collectionService *cllcsserv.CollectionService,
 ) http.Handler {
@@ -223,6 +250,14 @@ func HandleGetCollections(
 	})
 }
 
+// @Summary Добавить документ в коллекцию
+// @Description Добавляет документ в коллекцию.
+// @Tags Коллекции
+// @Produce json
+// @Param collection_id path int true "ID коллекции"
+// @Param document_id path int true "ID документ"
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/{collection_id}/{document_id} [post]
 func HandlePostDocumentToCollection(
 	collectionPathValue string,
 	documentPathValue string,
@@ -273,6 +308,14 @@ func HandlePostDocumentToCollection(
 	})
 }
 
+// @Summary Убрать документ из коллекции
+// @Description Убирает документ из коллекции.
+// @Tags Коллекции
+// @Produce json
+// @Param collection_id path int true "ID коллекции"
+// @Param document_id path int true "ID документ"
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/collections/{collection_id}/{document_id} [delete]
 func HandleDeleteDocumentFromCollection(
 	collectionPathValue string,
 	documentPathValue string,

@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+// @Summary Регистрация пользователя
+// @Description Зарегестрировать нового пользователя.
+// @Tags Аунтефикация
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/register [post]
 func HandlePostRegister(userService *usrserv.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body := struct {
@@ -36,6 +42,12 @@ func HandlePostRegister(userService *usrserv.UserService) http.Handler {
 	})
 }
 
+// @Summary Вход в аккаунт
+// @Description Начинает новую сессию и выдает куки.
+// @Tags Аунтефикация
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/login [post]
 func HandlePostLogin(
 	userService *usrserv.UserService,
 	userStore stores.UserStore,
@@ -104,6 +116,12 @@ func HandlePostLogin(
 	})
 }
 
+// @Summary Выход из аккаунта
+// @Description Окончивает сессию пользователя и удаляет куки.
+// @Tags Аунтефикация
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/logout [get]
 func HandlePostLogout(sessionService *sesserv.SessionService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, ok := sesserv.GetSession(r.Context())
@@ -124,6 +142,12 @@ func HandlePostLogout(sessionService *sesserv.SessionService) http.Handler {
 	})
 }
 
+// @Summary Смена пароля
+// @Description Меняет пароль пользователя.
+// @Tags Аунтефикация
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/user/{user_id} [patch]
 func HandlePatchUser(pathValue string, userService *usrserv.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestUserId := r.PathValue(pathValue)
@@ -166,6 +190,12 @@ func HandlePatchUser(pathValue string, userService *usrserv.UserService) http.Ha
 	})
 }
 
+// @Summary Регистрация пользователя
+// @Description Зарегестрировать нового пользователя.
+// @Tags Аунтефикация
+// @Produce json
+// @Success 200 {object} dto.SuccessMessage
+// @Router /api/user/{user_id} [delete]
 func HandleDeleteUser(
 	pathValue string,
 	userService *usrserv.UserService,

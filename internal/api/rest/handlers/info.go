@@ -15,6 +15,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// @Summary Получить статус приложения
+// @Description Получает текущий статус приложения.
+// @Tags Общее
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /api/status [get]
 func HandleGetStatus() http.HandlerFunc {
 	const status = `{"status": "OK"}`
 
@@ -25,10 +31,16 @@ func HandleGetStatus() http.HandlerFunc {
 	})
 }
 
+// @Summary Получить метрики приложения
+// @Description Получает текущие метрики приложения.
+// @Tags Общее
+// @Produce json
+// @Success 200 {object} dto.AppMetrics
+// @Router /api/metrics [get]
 func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
-	metricsJson := dto.AppMetrics{}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		metricsJson := dto.AppMetrics{}
+
 		filesMetrics, err := metricsStore.FindAllByName(r.Context(), models.FilesProcessed)
 		if err != nil && errors.Unwrap(errors.Unwrap(err)) != pgx.ErrNoRows {
 			log.Printf("handlers/info.HandleGetMetrics: [%v]", err)
@@ -83,6 +95,12 @@ func HandleGetMetrics(metricsStore stores.MetricStore) http.HandlerFunc {
 	})
 }
 
+// @Summary Получить версию приложения
+// @Description Получает текущую версию приложения.
+// @Tags Общее
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /api/version [get]
 func HandleGetVersion(config *config.AppConfig) http.HandlerFunc {
 	version := fmt.Sprintf(`{"version": "%s"}`, config.Version())
 

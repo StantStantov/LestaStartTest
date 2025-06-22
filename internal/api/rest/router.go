@@ -1,6 +1,7 @@
 package rest
 
 import (
+	_ "Stant/LestaGamesInternship/docs"
 	"Stant/LestaGamesInternship/internal/api/rest/handlers"
 	"Stant/LestaGamesInternship/internal/api/rest/middlewares"
 	"Stant/LestaGamesInternship/internal/app/config"
@@ -10,6 +11,8 @@ import (
 	"Stant/LestaGamesInternship/internal/app/services/usrserv"
 	"Stant/LestaGamesInternship/internal/domain/stores"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Дальше Бога нет...
@@ -28,6 +31,8 @@ func SetupRestRouter(
 	checkSession := middlewares.CheckSession(sessionService)
 	requireAuth := middlewares.RequireAuth(userStore)
 	requireCsrf := middlewares.RequireCsrf(sessionService)
+
+	router.Handle("GET /swagger/", httpSwagger.Handler(httpSwagger.URL("http://localhost:8080/swagger/doc.json")))
 
 	router.Handle("GET /api/status", handlers.HandleGetStatus())
 	router.Handle("GET /api/metrics", handlers.HandleGetMetrics(metricsStore))

@@ -1,0 +1,389 @@
+definitions:
+  dto.AppMetrics:
+    properties:
+      avg_time_processed:
+        type: number
+      files_processed:
+        type: integer
+      latest_file_processed_timestamp:
+        type: string
+      max_time_processed:
+        type: number
+      min_time_processed:
+        type: number
+    type: object
+  dto.Document:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.DocumentWithData:
+    properties:
+      data:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.HuffmanEncoding:
+    properties:
+      codes:
+        additionalProperties:
+          type: string
+        type: object
+      data:
+        type: string
+    type: object
+  dto.SuccessMessage:
+    properties:
+      success:
+        type: string
+    type: object
+  dto.Term:
+    properties:
+      idf:
+        type: number
+      tf:
+        type: integer
+      word:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/collections/:
+    get:
+      description: Получает информацию о всех коллекциях пользователя.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Получить коллекции
+      tags:
+      - Коллекции
+    post:
+      consumes:
+      - application/json
+      description: Создает новую коллекцию с переданным именем.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Создать новую коллекцию
+      tags:
+      - Коллекции
+  /api/collections/{collection_id}:
+    get:
+      description: Получает информацию о коллекции пользователя.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: collection_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Получить коллекцию
+      tags:
+      - Коллекции
+  /api/collections/{collection_id}/{document_id}:
+    delete:
+      description: Убирает документ из коллекции.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: collection_id
+        required: true
+        type: integer
+      - description: ID документ
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Убрать документ из коллекции
+      tags:
+      - Коллекции
+    post:
+      description: Добавляет документ в коллекцию.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: collection_id
+        required: true
+        type: integer
+      - description: ID документ
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Добавить документ в коллекцию
+      tags:
+      - Коллекции
+  /api/collections/{collection_id}/statistics:
+    get:
+      description: Получает статистику по коллекции.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: collection_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Получить статистику по коллекции
+      tags:
+      - Коллекции
+  /api/documents/:
+    get:
+      description: Получает информацию о документах, прикрепленные пользователем.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.Document'
+            type: array
+      summary: Получить документы
+      tags:
+      - Документы
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает переданный файл и закрепляет его за пользователем.
+      parameters:
+      - description: Файл для загрузки
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Загрузить документ
+      tags:
+      - Документы
+  /api/documents/{document_id}:
+    delete:
+      description: Удаляет документ, закрепленный за пользователем.
+      parameters:
+      - description: ID документа
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Удалить документ
+      tags:
+      - Документы
+    get:
+      description: Получает информацию о документе.
+      parameters:
+      - description: ID документа
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DocumentWithData'
+      summary: Получить документ
+      tags:
+      - Документы
+  /api/documents/{document_id}/huffman:
+    get:
+      description: Возвращает закодированное представление содержимого документа.
+      parameters:
+      - description: ID документа
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HuffmanEncoding'
+      summary: Кодирование документа алгоритмом Хаффмана
+      tags:
+      - Документы
+  /api/documents/{document_id}/statistics:
+    get:
+      description: Получает статистику по данному документку (с учётом коллекций,
+        за которыми он закреплён).
+      parameters:
+      - description: ID документа
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.Term'
+            type: array
+      summary: Получить статистику по документу
+      tags:
+      - Документы
+  /api/login:
+    post:
+      description: Начинает новую сессию и выдает куки.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Вход в аккаунт
+      tags:
+      - Аунтефикация
+  /api/logout:
+    get:
+      description: Окончивает сессию пользователя и удаляет куки.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Выход из аккаунта
+      tags:
+      - Аунтефикация
+  /api/metrics:
+    get:
+      description: Получает текущие метрики приложения.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AppMetrics'
+      summary: Получить метрики приложения
+      tags:
+      - Общее
+  /api/register:
+    post:
+      description: Зарегестрировать нового пользователя.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Регистрация пользователя
+      tags:
+      - Аунтефикация
+  /api/status:
+    get:
+      description: Получает текущий статус приложения.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить статус приложения
+      tags:
+      - Общее
+  /api/user/{user_id}:
+    delete:
+      description: Зарегестрировать нового пользователя.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Регистрация пользователя
+      tags:
+      - Аунтефикация
+    patch:
+      description: Меняет пароль пользователя.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SuccessMessage'
+      summary: Смена пароля
+      tags:
+      - Аунтефикация
+  /api/version:
+    get:
+      description: Получает текущую версию приложения.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить версию приложения
+      tags:
+      - Общее
+swagger: "2.0"
