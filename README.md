@@ -10,7 +10,8 @@
 ## Getting started
 1. Clone repo
 ```
-
+git clone https://github.com/StantStantov/LestaStartTest.git
+cd LestaStartTest
 ```
 2. Use Justfile to build project
 ```
